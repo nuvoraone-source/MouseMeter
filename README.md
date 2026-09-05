@@ -7,19 +7,18 @@ auswertet: zurückgelegte Mausstrecke, Mausgeschwindigkeit, Klicks und
 Tastaturanschläge – automatisch im Hintergrund, ohne dass eine Messung manuell
 gestartet werden muss.
 
-![MouseMeter v0.9.0](docs/screenshot-v0.9.0.png)
+![MouseMeter v0.10.0](docs/screenshot-v0.10.0.png)
 
-## Aktueller Stand: v0.9.0
+## Aktueller Stand: v0.10.0
 
 Alle zehn Dashboard-Kacheln zeigen echte, live erfasste Werte, die heutige
-Statistik wird dauerhaft gespeichert, und die Zeitraum-Auswahl wertet jetzt
-tatsächlich aus: „Woche“, „Monat“ und „Jahr“ fassen die gespeicherten
-Tagesdaten korrekt zusammen (inklusive Datumsbereich-Anzeige), statt nur den
-aktuellen Tag zu wiederholen. Der persönliche Geschwindigkeitsrekord gilt
-dauerhaft, unabhängig vom gewählten Zeitraum. Beim Minimieren verschwindet
-MouseMeter aus der Taskleiste und legt sich in die Ablage neben der Uhr. Was
-in dieser Version enthalten ist, steht im [Changelog](CHANGELOG.md). Die
-grafische Darstellung als Diagramm folgt mit der nächsten Version.
+Statistik wird dauerhaft gespeichert, und Woche/Monat/Jahr werten die
+gespeicherten Tagesdaten aus - jetzt inklusive echtem Balkendiagramm mit
+wählbarer Kennzahl (Strecke, Klicks, Tastatur, Geschwindigkeit). Der
+persönliche Geschwindigkeitsrekord gilt dauerhaft, unabhängig vom gewählten
+Zeitraum. Beim Minimieren verschwindet MouseMeter aus der Taskleiste und
+legt sich in die Ablage neben der Uhr. Was in dieser Version enthalten ist,
+steht im [Changelog](CHANGELOG.md).
 
 Die Daten liegen als JSON-Datei in `data/` neben der EXE (portabel) - siehe
 `tools/`-Abschnitt weiter unten für Details zum Speicherort.

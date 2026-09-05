@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,11 +19,13 @@ namespace MouseMeter.Views;
 /// (v0.6.0), Scrollrad-Ausschläge (v0.7.0) und deren Strecke (v0.7.1) werden
 /// live erfasst. Seit v0.8.0 übersteht die heutige Statistik einen Neustart
 /// von MouseMeter, und der persönliche Geschwindigkeitsrekord gilt dauerhaft.
-/// Seit dieser Version (v0.9.0) werten Woche/Monat/Jahr die gespeicherten
-/// Tagesdaten tatsächlich aus, statt nur den heutigen Tag zu wiederholen
-/// (Gesamtkonzept Abschnitt 17-26). Beim Minimieren verschwindet MouseMeter
-/// aus der Taskleiste und legt stattdessen ein Symbol in die Ablage neben
-/// der Uhr.
+/// Seit v0.9.0 werten Woche/Monat/Jahr die gespeicherten Tagesdaten
+/// tatsächlich aus, statt nur den heutigen Tag zu wiederholen. Seit dieser
+/// Version (v0.10.0) gibt es dazu ein echtes Balkendiagramm mit wählbarer
+/// Kennzahl (Strecke/Klicks/Tastatur/Geschwindigkeit) - siehe
+/// <see cref="ChartSeriesBuilder"/> (Gesamtkonzept Abschnitt 17-22). Beim
+/// Minimieren verschwindet MouseMeter aus der Taskleiste und legt
+/// stattdessen ein Symbol in die Ablage neben der Uhr.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -60,6 +63,7 @@ public partial class MainWindow : Window
     private double _recordSpeedMetersPerSecond;
 
     private DashboardPeriod _selectedPeriod = DashboardPeriod.Day;
+    private ChartMetric _selectedMetric = ChartMetric.Distance;
 
     public MainWindow()
     {
@@ -257,6 +261,98 @@ public partial class MainWindow : Window
         ScrollDistanceValueText.Text = Formatting.Distance(ScrollTracker.ComputeDistance(display.ScrollForward + display.ScrollBackward));
         ScrollForwardValueText.Text = Formatting.Count(display.ScrollForward);
         ScrollBackwardValueText.Text = Formatting.Count(display.ScrollBackward);
+
+        RenderChart();
+    }
+
+    /// <summary>
+    /// Zeichnet das Balkendiagramm für Woche/Monat/Jahr neu (ein Balken pro
+    /// Tag bzw. bei "Jahr" pro Monat, siehe <see cref="ChartSeriesBuilder"/>).
+    /// Für "Tag" fehlt die nötige stundengenaue Auflösung - dort bleibt es
+    /// beim erklärenden Hinweistext.
+    /// </summary>
+    private void RenderChart()
+    {
+        bool isDay = _selectedPeriod == DashboardPeriod.Day;
+
+        MetricSelector.Visibility = isDay ? Visibility.Collapsed : Visibility.Visible;
+        ChartBarsPanel.Visibility = isDay ? Visibility.Collapsed : Visibility.Visible;
+        ChartPlaceholderText.Visibility = isDay ? Visibility.Visible : Visibility.Collapsed;
+
+        if (isDay)
+        {
+            return;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        List<ChartDataPoint> series = ChartSeriesBuilder.Build(_appState, today, _selectedPeriod, CaptureLiveToday(), _selectedMetric);
+
+        double max = series.Count > 0 ? series.Max(p => p.Value) : 0;
+        if (max <= 0)
+        {
+            max = 1; // vermeidet Division durch Null, wenn noch nichts erfasst wurde
+        }
+
+        ChartBarsPanel.Columns = Math.Max(1, series.Count);
+        ChartBarsPanel.Children.Clear();
+
+        const double chartHeight = 108;
+
+        foreach (ChartDataPoint point in series)
+        {
+            double barHeight = Math.Max(2, point.Value / max * chartHeight);
+
+            var bar = new Border
+            {
+                Height = barHeight,
+                CornerRadius = new CornerRadius(3, 3, 0, 0),
+                Background = (Brush)FindResource("AccentGradientBrush"),
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(2, 0, 2, 0),
+                ToolTip = point.Tooltip,
+            };
+
+            var barHost = new Grid { Height = chartHeight, VerticalAlignment = VerticalAlignment.Bottom };
+            barHost.Children.Add(bar);
+
+            var label = new TextBlock
+            {
+                Text = point.Label,
+                FontFamily = (FontFamily)FindResource("UiFont"),
+                FontSize = 10,
+                Foreground = (Brush)FindResource("TextMutedBrush"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 4, 0, 0),
+            };
+
+            var cell = new StackPanel();
+            cell.Children.Add(barHost);
+            cell.Children.Add(label);
+
+            ChartBarsPanel.Children.Add(cell);
+        }
+    }
+
+    private void OnMetricChanged(object sender, RoutedEventArgs e)
+    {
+        // _appState ist erst nach InitializeComponent() gesetzt - das von der
+        // XAML-Voreinstellung "IsChecked=True" ausgelöste allererste Checked-
+        // Ereignis muss deshalb ignoriert werden, bevor RenderChart() etwas
+        // liest, das noch gar nicht existiert.
+        if (_appState is null || sender is not RadioButton { IsChecked: true } selected)
+        {
+            return;
+        }
+
+        _selectedMetric = selected.Name switch
+        {
+            nameof(MetricClicks) => ChartMetric.Clicks,
+            nameof(MetricKeystrokes) => ChartMetric.Keystrokes,
+            nameof(MetricSpeed) => ChartMetric.Speed,
+            _ => ChartMetric.Distance,
+        };
+
+        RenderChart();
     }
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)
@@ -266,20 +362,18 @@ public partial class MainWindow : Window
             return;
         }
 
-        (_selectedPeriod, string periodLabel) = selected.Name switch
+        _selectedPeriod = selected.Name switch
         {
-            nameof(PeriodWeek) => (DashboardPeriod.Week, "die Woche"),
-            nameof(PeriodMonth) => (DashboardPeriod.Month, "den Monat"),
-            nameof(PeriodYear) => (DashboardPeriod.Year, "das Jahr"),
-            _ => (DashboardPeriod.Day, "den Tag"),
+            nameof(PeriodWeek) => DashboardPeriod.Week,
+            nameof(PeriodMonth) => DashboardPeriod.Month,
+            nameof(PeriodYear) => DashboardPeriod.Year,
+            _ => DashboardPeriod.Day,
         };
 
         var today = DateOnly.FromDateTime(DateTime.Now);
         PeriodRangeText.Text = _selectedPeriod == DashboardPeriod.Day
             ? string.Empty
             : FormatRange(PeriodAggregator.GetStart(_selectedPeriod, today), today);
-
-        ChartPlaceholderText.Text = $"Diagramm für {periodLabel} folgt in einer der nächsten Versionen.";
 
         // Sofort mit den Werten des neu gewählten Zeitraums neuzeichnen, statt
         // auf den nächsten Anzeige-Tick zu warten.

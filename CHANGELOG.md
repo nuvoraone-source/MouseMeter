@@ -4,8 +4,41 @@ Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36), mit einer Planänderung ab
 v0.7.0: auf Nutzerwunsch wurden Ablage-Minimieren und Scrollrad-Erfassung
 vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
-dadurch eine Version weiter nach hinten - auf v0.8.0, und die Zeitraum-
-Auswertung entsprechend auf v0.9.0.
+dadurch eine Version weiter nach hinten - auf v0.8.0, die Zeitraum-Auswertung
+auf v0.9.0 und die Diagramme auf v0.10.0.
+
+## [0.10.0] – 2026-09-05
+
+Diagramme.
+
+### Neu
+- Echtes Balkendiagramm für Woche, Monat und Jahr: ein Balken pro Tag
+  (Woche/Monat) bzw. pro Monat (Jahr), berechnet aus den gespeicherten
+  Tagesdaten. Ein Tooltip auf jedem Balken zeigt Datum/Monat und genauen
+  Wert.
+- Kennzahl wählbar über eine kleine Schaltfläche oberhalb des Diagramms:
+  Strecke, Klicks, Tastatur oder Geschwindigkeit (Durchschnitt des jeweiligen
+  Tages bzw. Monats) - siehe Gesamtkonzept Abschnitt 22.
+- `ChartSeriesBuilder` (neu in `Infrastructure/Storage`) baut die Datenreihe;
+  Monatsansicht beschriftet nur jeden 5. Tag, um Überlappungen bei bis zu 31
+  Balken zu vermeiden.
+- Fensterhöhe leicht vergrößert (760 statt 700 px), damit Kennzahl-Auswahl
+  und Diagramm Platz finden.
+
+### Bewusste Einschränkung
+Für „Tag“ gibt es weiterhin kein Diagramm: MouseMeter speichert nur einen
+Wert pro Tag, keine stundengenaue Zeitreihe. Ein Verlauf über den Tagesablauf
+(wie ursprünglich in Abschnitt 18 skizziert) würde eine feinere Auflösung
+voraussetzen, die aktuell nicht erfasst wird. Der Hinweistext an dieser
+Stelle erklärt das transparent, statt eine leere Grafik zu zeigen.
+
+### Live getestet
+Mit fünf Testtagen unterschiedlicher Werte (80/150/40/200/100,5 m):
+Wochendiagramm zeigte die Balken in exakt der richtigen Höhe und
+Reihenfolge; die Jahresansicht ordnete einen Eintrag vom 31. August
+korrekt dem Balken „Aug“ zu und die vier September-Einträge korrekt „Sep“.
+Die Kennzahl-Umschaltung (Strecke → Klicks) aktualisierte das Diagramm
+sofort.
 
 ## [0.9.0] – 2026-09-05
 

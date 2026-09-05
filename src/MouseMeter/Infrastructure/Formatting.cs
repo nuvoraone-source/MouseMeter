@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using MouseMeter.Infrastructure.Storage;
 
 namespace MouseMeter.Infrastructure;
 
@@ -24,4 +25,12 @@ public static class Formatting
 
     /// <summary>Formatiert einen Zähler ohne Nachkommastellen, z. B. "1.683".</summary>
     public static string Count(long value) => value.ToString("N0", Culture);
+
+    /// <summary>Formatiert einen Wert passend zur jeweiligen Diagramm-Kennzahl, inklusive Einheit.</summary>
+    public static string MetricValue(ChartMetric metric, double value) => metric switch
+    {
+        ChartMetric.Distance => $"{Distance(value)} m",
+        ChartMetric.Speed => $"{Speed(value)} m/s",
+        _ => Count((long)Math.Round(value)),
+    };
 }
