@@ -4,7 +4,39 @@ Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36), mit einer Planänderung ab
 v0.7.0: auf Nutzerwunsch wurden Ablage-Minimieren und Scrollrad-Erfassung
 vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
-dadurch eine Version weiter nach hinten - auf v0.8.0.
+dadurch eine Version weiter nach hinten - auf v0.8.0, und die Zeitraum-
+Auswertung entsprechend auf v0.9.0.
+
+## [0.9.0] – 2026-09-05
+
+Auswertung nach Tag/Woche/Monat/Jahr.
+
+### Neu
+- Die Zeitraum-Auswahl wertet jetzt tatsächlich aus: „Woche“ fasst Montag bis
+  heute zusammen, „Monat“ den 1. bis heute, „Jahr“ den 1. Januar bis heute -
+  berechnet aus den gespeicherten Tagesdaten (Gesamtkonzept Abschnitt 26).
+  Der heutige Anteil wird dabei aus den laufenden Live-Werten übernommen,
+  nicht aus dem bis zu 5 Sekunden alten Speicherstand.
+- Unterhalb der Zeitraum-Auswahl zeigt eine kleine Zeile den genauen
+  Datumsbereich, z. B. „31.08. – 05.09.2026“.
+- `PeriodAggregator` (neu in `Infrastructure/Storage`) summiert Mausstrecke,
+  Aktivzeit, alle Klickarten, Tastaturanschläge und Scrollrad-Ausschläge über
+  den gewählten Zeitraum; die Durchschnittsgeschwindigkeit wird daraus neu
+  berechnet (Gesamtstrecke ÷ Gesamtzeit des Zeitraums).
+- Die Kachel „Geschwindigkeit“ zeigt bei Woche/Monat/Jahr bewusst „–“ statt
+  einer Zahl - eine *aktuelle* Geschwindigkeit ergibt für einen
+  zurückliegenden Zeitraum keinen Sinn. Der Rekord bleibt unabhängig vom
+  gewählten Zeitraum immer der eine, dauerhafte persönliche Bestwert.
+
+### Live getestet
+Mit einem simulierten Vortag (100,5 m, 50/10/2 Klicks, 500 Anschläge, 20/5
+Scrollausschläge) plus echten Klicks am aktuellen Tag: die Kacheln bei
+„Woche“ und „Monat“ zeigten exakt die korrekt aufsummierten Werte inklusive
+des richtig berechneten Datumsbereichs.
+
+### Noch nicht enthalten
+Die eigentliche grafische Darstellung (Diagramm/Verlauf über die Tage eines
+Zeitraums) fehlt noch - das folgt mit der nächsten Version.
 
 ## [0.8.0] – 2026-09-05
 

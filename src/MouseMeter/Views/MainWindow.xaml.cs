@@ -16,11 +16,13 @@ namespace MouseMeter.Views;
 /// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0),
 /// Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0), Tastaturanschläge
 /// (v0.6.0), Scrollrad-Ausschläge (v0.7.0) und deren Strecke (v0.7.1) werden
-/// live erfasst. Seit dieser Version (v0.8.0) übersteht die heutige
-/// Statistik einen Neustart von MouseMeter, und der persönliche
-/// Geschwindigkeitsrekord gilt dauerhaft (Gesamtkonzept Abschnitt 24-26).
-/// Beim Minimieren verschwindet MouseMeter aus der Taskleiste und legt
-/// stattdessen ein Symbol in die Ablage neben der Uhr.
+/// live erfasst. Seit v0.8.0 übersteht die heutige Statistik einen Neustart
+/// von MouseMeter, und der persönliche Geschwindigkeitsrekord gilt dauerhaft.
+/// Seit dieser Version (v0.9.0) werten Woche/Monat/Jahr die gespeicherten
+/// Tagesdaten tatsächlich aus, statt nur den heutigen Tag zu wiederholen
+/// (Gesamtkonzept Abschnitt 17-26). Beim Minimieren verschwindet MouseMeter
+/// aus der Taskleiste und legt stattdessen ein Symbol in die Ablage neben
+/// der Uhr.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -56,6 +58,8 @@ public partial class MainWindow : Window
     // Persönlicher Geschwindigkeitsrekord - gilt dauerhaft, nicht nur fuer
     // den aktuellen Tag oder die laufende Sitzung (Abschnitt 11).
     private double _recordSpeedMetersPerSecond;
+
+    private DashboardPeriod _selectedPeriod = DashboardPeriod.Day;
 
     public MainWindow()
     {
@@ -143,20 +147,23 @@ public partial class MainWindow : Window
         _lastSampleDistanceMeters = 0;
     }
 
+    /// <summary>Momentaufnahme der heutigen Live-Werte im Speicherformat - dient sowohl der Anzeige als auch dem Sichern.</summary>
+    private DailyStats CaptureLiveToday() => new()
+    {
+        DistanceMeters = _distanceTracker.TotalDistanceMeters,
+        ActiveSeconds = _distanceTracker.Elapsed.TotalSeconds,
+        LeftClicks = _clickTracker.LeftClicks,
+        RightClicks = _clickTracker.RightClicks,
+        MiddleClicks = _clickTracker.MiddleClicks,
+        Keystrokes = _keystrokeTracker.TotalKeystrokes,
+        ScrollForward = _scrollTracker.ForwardScrolls,
+        ScrollBackward = _scrollTracker.BackwardScrolls,
+    };
+
     /// <summary>Schreibt den aktuellen Stand des heutigen Tages und den Rekord auf die Festplatte.</summary>
     private void SaveState()
     {
-        _appState.Days[DayKey(_currentDay)] = new DailyStats
-        {
-            DistanceMeters = _distanceTracker.TotalDistanceMeters,
-            ActiveSeconds = _distanceTracker.Elapsed.TotalSeconds,
-            LeftClicks = _clickTracker.LeftClicks,
-            RightClicks = _clickTracker.RightClicks,
-            MiddleClicks = _clickTracker.MiddleClicks,
-            Keystrokes = _keystrokeTracker.TotalKeystrokes,
-            ScrollForward = _scrollTracker.ForwardScrolls,
-            ScrollBackward = _scrollTracker.BackwardScrolls,
-        };
+        _appState.Days[DayKey(_currentDay)] = CaptureLiveToday();
         _appState.AllTimeRecordSpeedMetersPerSecond = _recordSpeedMetersPerSecond;
 
         _dataStore.Save(_appState);
@@ -204,67 +211,85 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln. Alle neun
-    /// Kacheln stammen jetzt aus der echten Erfassung, im endgültigen
-    /// Zahlenformat (Abschnitt 33: Messwerte mit zwei Nachkommastellen,
-    /// Zähler ohne).
+    /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln. Bei "Tag"
+    /// sind das die laufenden Live-Werte; bei Woche/Monat/Jahr die aus den
+    /// gespeicherten Tagesdaten zusammengefassten Werte (Abschnitt 26). Im
+    /// endgültigen Zahlenformat (Abschnitt 33: Messwerte mit zwei
+    /// Nachkommastellen, Zähler ohne).
     /// </summary>
     private void RenderDashboard()
     {
-        double totalDistance = _distanceTracker.TotalDistanceMeters;
+        double totalDistanceToday = _distanceTracker.TotalDistanceMeters;
 
         // Aktuelle Geschwindigkeit: zurückgelegte Strecke seit dem letzten
         // Neuzeichnen, geteilt durch die dafür tatsächlich vergangene Zeit
         // (nicht das nominelle Intervall, das durch UI-Jitter leicht abweicht).
+        // Läuft unabhängig von der Zeitraum-Auswahl immer mit, damit auch
+        // beim Betrachten von Woche/Monat/Jahr weiter ein neuer Rekord
+        // erkannt werden kann.
         double sampleSeconds = _sampleStopwatch.Elapsed.TotalSeconds;
         double currentSpeed = sampleSeconds > 0
-            ? (totalDistance - _lastSampleDistanceMeters) / sampleSeconds
+            ? (totalDistanceToday - _lastSampleDistanceMeters) / sampleSeconds
             : 0;
-        _lastSampleDistanceMeters = totalDistance;
+        _lastSampleDistanceMeters = totalDistanceToday;
         _sampleStopwatch.Restart();
 
         _recordSpeedMetersPerSecond = Math.Max(_recordSpeedMetersPerSecond, currentSpeed);
 
-        double totalSeconds = _distanceTracker.Elapsed.TotalSeconds;
-        double averageSpeed = totalSeconds > 0 ? totalDistance / totalSeconds : 0;
+        DailyStats display = PeriodAggregator.Aggregate(_appState, _currentDay, _selectedPeriod, CaptureLiveToday());
+        double averageSpeed = display.ActiveSeconds > 0 ? display.DistanceMeters / display.ActiveSeconds : 0;
+        bool isToday = _selectedPeriod == DashboardPeriod.Day;
 
-        DistanceValueText.Text = Formatting.Distance(totalDistance);
-        SpeedValueText.Text = Formatting.Speed(currentSpeed);
+        DistanceValueText.Text = Formatting.Distance(display.DistanceMeters);
+        // Eine "aktuelle" Geschwindigkeit ergibt für einen zurückliegenden
+        // Zeitraum keinen Sinn - nur für "Tag" wird hier ein Wert gezeigt.
+        SpeedValueText.Text = isToday ? Formatting.Speed(currentSpeed) : "–";
         AverageValueText.Text = Formatting.Speed(averageSpeed);
         RecordValueText.Text = Formatting.Speed(_recordSpeedMetersPerSecond);
 
-        LeftClicksValueText.Text = Formatting.Count(_clickTracker.LeftClicks);
-        RightClicksValueText.Text = Formatting.Count(_clickTracker.RightClicks);
-        MiddleClicksValueText.Text = Formatting.Count(_clickTracker.MiddleClicks);
-        TotalClicksValueText.Text = Formatting.Count(_clickTracker.TotalClicks);
+        LeftClicksValueText.Text = Formatting.Count(display.LeftClicks);
+        RightClicksValueText.Text = Formatting.Count(display.RightClicks);
+        MiddleClicksValueText.Text = Formatting.Count(display.MiddleClicks);
+        TotalClicksValueText.Text = Formatting.Count(display.LeftClicks + display.RightClicks + display.MiddleClicks);
 
-        KeystrokesValueText.Text = Formatting.Count(_keystrokeTracker.TotalKeystrokes);
+        KeystrokesValueText.Text = Formatting.Count(display.Keystrokes);
 
-        ScrollDistanceValueText.Text = Formatting.Distance(_scrollTracker.DistanceMeters);
-        ScrollForwardValueText.Text = Formatting.Count(_scrollTracker.ForwardScrolls);
-        ScrollBackwardValueText.Text = Formatting.Count(_scrollTracker.BackwardScrolls);
+        ScrollDistanceValueText.Text = Formatting.Distance(ScrollTracker.ComputeDistance(display.ScrollForward + display.ScrollBackward));
+        ScrollForwardValueText.Text = Formatting.Count(display.ScrollForward);
+        ScrollBackwardValueText.Text = Formatting.Count(display.ScrollBackward);
     }
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)
     {
-        // Woche/Monat/Jahr lesen noch nicht aus der gespeicherten Historie:
-        // die Auswahl wird bereits entgegengenommen, die eigentliche
-        // Auswertung über mehrere Tage folgt mit der nächsten Version.
         if (sender is not RadioButton { IsChecked: true } selected || ChartPlaceholderText is null)
         {
             return;
         }
 
-        string period = selected.Name switch
+        (_selectedPeriod, string periodLabel) = selected.Name switch
         {
-            nameof(PeriodWeek) => "die Woche",
-            nameof(PeriodMonth) => "den Monat",
-            nameof(PeriodYear) => "das Jahr",
-            _ => "den Tag",
+            nameof(PeriodWeek) => (DashboardPeriod.Week, "die Woche"),
+            nameof(PeriodMonth) => (DashboardPeriod.Month, "den Monat"),
+            nameof(PeriodYear) => (DashboardPeriod.Year, "das Jahr"),
+            _ => (DashboardPeriod.Day, "den Tag"),
         };
 
-        ChartPlaceholderText.Text = $"Diagramm für {period} folgt in einer der nächsten Versionen.";
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        PeriodRangeText.Text = _selectedPeriod == DashboardPeriod.Day
+            ? string.Empty
+            : FormatRange(PeriodAggregator.GetStart(_selectedPeriod, today), today);
+
+        ChartPlaceholderText.Text = $"Diagramm für {periodLabel} folgt in einer der nächsten Versionen.";
+
+        // Sofort mit den Werten des neu gewählten Zeitraums neuzeichnen, statt
+        // auf den nächsten Anzeige-Tick zu warten.
+        RenderDashboard();
     }
+
+    private static string FormatRange(DateOnly start, DateOnly end) =>
+        start == end
+            ? start.ToString("dd.MM.yyyy")
+            : $"{start:dd.MM.} – {end:dd.MM.yyyy}";
 
     private void OnSettingsClick(object sender, RoutedEventArgs e)
     {

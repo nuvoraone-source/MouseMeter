@@ -54,22 +54,29 @@
         </Grid>
 
         <!-- ==================== Zeitraum-Auswahl ==================== -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="4">
-            <UniformGrid Rows="1" Columns="4">
-                <RadioButton x:Name="PeriodDay" Content="Tag" GroupName="Zeitraum"
-                             Style="{StaticResource PeriodButton}" IsChecked="True"
-                             Checked="OnPeriodChanged" />
-                <RadioButton x:Name="PeriodWeek" Content="Woche" GroupName="Zeitraum"
-                             Style="{StaticResource PeriodButton}"
-                             Checked="OnPeriodChanged" />
-                <RadioButton x:Name="PeriodMonth" Content="Monat" GroupName="Zeitraum"
-                             Style="{StaticResource PeriodButton}"
-                             Checked="OnPeriodChanged" />
-                <RadioButton x:Name="PeriodYear" Content="Jahr" GroupName="Zeitraum"
-                             Style="{StaticResource PeriodButton}"
-                             Checked="OnPeriodChanged" />
-            </UniformGrid>
-        </Border>
+        <StackPanel Grid.Row="1" Margin="0,18,0,0">
+            <Border Style="{StaticResource Card}" Padding="4">
+                <UniformGrid Rows="1" Columns="4">
+                    <RadioButton x:Name="PeriodDay" Content="Tag" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" IsChecked="True"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodWeek" Content="Woche" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodMonth" Content="Monat" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodYear" Content="Jahr" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}"
+                                 Checked="OnPeriodChanged" />
+                </UniformGrid>
+            </Border>
+
+            <TextBlock x:Name="PeriodRangeText"
+                       Style="{StaticResource TaglineText}"
+                       HorizontalAlignment="Center"
+                       Margin="0,8,0,0" />
+        </StackPanel>
 
         <!-- ==================== Dashboard + Diagramm ==================== -->
         <StackPanel Grid.Row="2" Margin="0,14,0,0">

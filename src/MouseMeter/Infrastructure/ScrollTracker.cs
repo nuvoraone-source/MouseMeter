@@ -28,7 +28,14 @@ public sealed class ScrollTracker : IDisposable
     /// Geschätzte "Scrollstrecke" in Metern - beide Richtungen zählen positiv,
     /// so wie auch Vor- und Zurückbewegen der Maus die Mausstrecke erhöht.
     /// </summary>
-    public double DistanceMeters => TotalScrolls * MetersPerNotch;
+    public double DistanceMeters => ComputeDistance(TotalScrolls);
+
+    /// <summary>
+    /// Rechnet eine beliebige Anzahl Scrollrad-Ausschläge in die geschätzte
+    /// Strecke um - genutzt sowohl hier als auch bei der Zusammenfassung
+    /// mehrerer Tage zu Woche/Monat/Jahr (<see cref="PeriodAggregator"/>).
+    /// </summary>
+    public static double ComputeDistance(long totalNotches) => totalNotches * MetersPerNotch;
 
     public ScrollTracker()
     {
