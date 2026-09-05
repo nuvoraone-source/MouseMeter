@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        MouseMeter-Logo als Vektorressource in einem 256x256-Koordinatenraum.
+        Identische Proportionen wie tools/make-icon.ps1, damit Fenster-Logo und
+        Anwendungssymbol exakt gleich aussehen.
+    -->
+
+    <RectangleGeometry x:Key="LogoBodyGeometry" Rect="65.28,19.2,125.44,217.6" RadiusX="62.72" RadiusY="62.72" />
+    <RectangleGeometry x:Key="LogoWheelGeometry" Rect="118.4,55.04,19.2,42.24" RadiusX="9.6" RadiusY="9.6" />
+    <PathGeometry x:Key="LogoTrailGeometry" Figures="M 51.2,194.5 A 79.36,76.8 0 0 1 51.2,61.49" />
+
+    <DrawingImage x:Key="LogoImage">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+
+                <GeometryDrawing Geometry="{StaticResource LogoTrailGeometry}">
+                    <GeometryDrawing.Pen>
+                        <Pen Brush="#BE22D3EE" Thickness="14.08" StartLineCap="Round" EndLineCap="Round" />
+                    </GeometryDrawing.Pen>
+                </GeometryDrawing>
+
+                <GeometryDrawing Geometry="{StaticResource LogoBodyGeometry}">
+                    <GeometryDrawing.Brush>
+                        <LinearGradientBrush MappingMode="Absolute" StartPoint="65.28,19.2" EndPoint="190.72,236.8">
+                            <GradientStop Color="#60A5FA" Offset="0" />
+                            <GradientStop Color="#22D3EE" Offset="1" />
+                        </LinearGradientBrush>
+                    </GeometryDrawing.Brush>
+                </GeometryDrawing>
+
+                <GeometryDrawing Geometry="{StaticResource LogoWheelGeometry}" Brush="#EBFFFFFF" />
+
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+</ResourceDictionary>

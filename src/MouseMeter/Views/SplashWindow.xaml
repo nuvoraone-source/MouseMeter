@@ -1,0 +1,120 @@
+<Window x:Class="MouseMeter.Views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MouseMeter"
+        Width="440" Height="268"
+        WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Opacity="0"
+        ShowInTaskbar="False"
+        Topmost="True"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <Window.Resources>
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.28" />
+            <DoubleAnimation Storyboard.TargetName="Root"
+                             Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleX)"
+                             From="0.96" To="1" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Root"
+                             Storyboard.TargetProperty="RenderTransform.(ScaleTransform.ScaleY)"
+                             From="0.96" To="1" Duration="0:0:0.34">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Progress"
+                             Storyboard.TargetProperty="Width"
+                             From="0" To="240" Duration="0:0:1.45">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <Storyboard x:Key="FadeOut">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.22" />
+        </Storyboard>
+    </Window.Resources>
+
+    <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+            <ScaleTransform ScaleX="1" ScaleY="1" />
+        </Grid.RenderTransform>
+
+        <Border CornerRadius="16" Margin="14" ClipToBounds="True">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="28" ShadowDepth="6" Direction="270" Opacity="0.55" Color="#000000" />
+            </Border.Effect>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#151A24" Offset="0" />
+                    <GradientStop Color="#0E1116" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <!-- Dezenter Farbschimmer hinter dem Logo -->
+                <Ellipse Width="300" Height="300"
+                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                         Margin="0,-60,0,0" Opacity="0.16">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#22D3EE" Offset="0" />
+                            <GradientStop Color="#0022D3EE" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <Border BorderBrush="#2A3140" BorderThickness="1" CornerRadius="16" />
+
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,-6,0,0">
+
+                    <Image Source="{StaticResource LogoImage}"
+                           Width="62" Height="62"
+                           HorizontalAlignment="Center" />
+
+                    <TextBlock Text="MouseMeter"
+                               Style="{StaticResource WordmarkText}"
+                               FontSize="30"
+                               HorizontalAlignment="Center"
+                               Margin="0,14,0,0" />
+
+                    <TextBlock Text="Every Move Counts"
+                               Style="{StaticResource TaglineText}"
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0" />
+
+                    <!-- Ladebalken: 240 px Gesamtbreite -->
+                    <Border Width="240" Height="3" CornerRadius="2"
+                            Background="#20262F" Margin="0,22,0,0">
+                        <Rectangle x:Name="Progress"
+                                   Width="0" Height="3"
+                                   HorizontalAlignment="Left"
+                                   RadiusX="2" RadiusY="2"
+                                   Fill="{StaticResource AccentGradientBrush}" />
+                    </Border>
+
+                </StackPanel>
+
+                <TextBlock x:Name="VersionText"
+                           Style="{StaticResource TaglineText}"
+                           FontSize="10"
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                           Margin="0,0,18,12" />
+
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

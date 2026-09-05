@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>MouseMeter</RootNamespace>
+    <AssemblyName>MouseMeter</AssemblyName>
+    <ApplicationIcon>Assets\MouseMeter.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Product>MouseMeter</Product>
+    <AssemblyTitle>MouseMeter</AssemblyTitle>
+    <Description>MouseMeter - Every Move Counts</Description>
+    <Company>MouseMeter</Company>
+    <Copyright>Copyright (c) 2026</Copyright>
+  </PropertyGroup>
+
+  <!-- Portable: kein Installer, keine Adminrechte, keine Schreibzugriffe ausserhalb des Programmordners. -->
+  <PropertyGroup>
+    <SatelliteResourceLanguages>de;en</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\MouseMeter.ico" />
+  </ItemGroup>
+
+</Project>

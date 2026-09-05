@@ -1,0 +1,114 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+>
+
+    <!-- ==================== Farben ==================== -->
+    <Color x:Key="BgBaseColor">#0E1116</Color>
+    <Color x:Key="BgSurfaceColor">#161A22</Color>
+    <Color x:Key="BgSurfaceAltColor">#1C212B</Color>
+    <Color x:Key="StrokeColor">#262C38</Color>
+    <Color x:Key="TextPrimaryColor">#E8ECF3</Color>
+    <Color x:Key="TextMutedColor">#8C97AB</Color>
+    <Color x:Key="AccentAColor">#60A5FA</Color>
+    <Color x:Key="AccentBColor">#22D3EE</Color>
+    <Color x:Key="StatusOkColor">#34D399</Color>
+    <Color x:Key="StatusOffColor">#6B7484</Color>
+
+    <SolidColorBrush x:Key="BgBaseBrush" Color="{StaticResource BgBaseColor}" />
+    <SolidColorBrush x:Key="BgSurfaceBrush" Color="{StaticResource BgSurfaceColor}" />
+    <SolidColorBrush x:Key="BgSurfaceAltBrush" Color="{StaticResource BgSurfaceAltColor}" />
+    <SolidColorBrush x:Key="StrokeBrush" Color="{StaticResource StrokeColor}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentBColor}" />
+    <SolidColorBrush x:Key="StatusOkBrush" Color="{StaticResource StatusOkColor}" />
+    <SolidColorBrush x:Key="StatusOffBrush" Color="{StaticResource StatusOffColor}" />
+
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AccentAColor}" Offset="0" />
+        <GradientStop Color="{StaticResource AccentBColor}" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- ==================== Typografie ==================== -->
+    <FontFamily x:Key="UiFont">Segoe UI Variable Display, Segoe UI, Segoe UI Variable, sans-serif</FontFamily>
+
+    <Style x:Key="WordmarkText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    </Style>
+
+    <Style x:Key="TaglineText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    </Style>
+
+    <Style x:Key="SectionTitleText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="BodyText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="FooterText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ==================== Bausteine ==================== -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource StrokeBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <!-- Rundes, flaches Symbolfeld (z. B. Zahnrad) -->
+    <Style x:Key="IconButton" TargetType="Button">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bg"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="8">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgSurfaceAltBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource StrokeBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Zahnrad als Vektorpfad (24x24-Raster) -->
+    <PathGeometry x:Key="GearGeometry" FillRule="EvenOdd" Figures="M 22.37,9.8 A 10.6,10.6 0 0 1 22.37,14.2 L 19.7,14.5 A 8.1,8.1 0 0 1 19.22,15.68 L 20.89,17.77 A 10.6,10.6 0 0 1 17.77,20.89 L 15.68,19.22 A 8.1,8.1 0 0 1 14.5,19.7 L 14.2,22.37 A 10.6,10.6 0 0 1 9.8,22.37 L 9.5,19.7 A 8.1,8.1 0 0 1 8.32,19.22 L 6.23,20.89 A 10.6,10.6 0 0 1 3.11,17.77 L 4.78,15.68 A 8.1,8.1 0 0 1 4.3,14.5 L 1.63,14.2 A 10.6,10.6 0 0 1 1.63,9.8 L 4.3,9.5 A 8.1,8.1 0 0 1 4.78,8.32 L 3.11,6.23 A 10.6,10.6 0 0 1 6.23,3.11 L 8.32,4.78 A 8.1,8.1 0 0 1 9.5,4.3 L 9.8,1.63 A 10.6,10.6 0 0 1 14.2,1.63 L 14.5,4.3 A 8.1,8.1 0 0 1 15.68,4.78 L 17.77,3.11 A 10.6,10.6 0 0 1 20.89,6.23 L 19.22,8.32 A 8.1,8.1 0 0 1 19.7,9.5 L 22.37,9.8 Z M 15.6,12 A 3.6,3.6 0 0 1 8.4,12 A 3.6,3.6 0 0 1 15.6,12 Z" />
+
+</ResourceDictionary>
