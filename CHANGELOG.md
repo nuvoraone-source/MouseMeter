@@ -6,6 +6,24 @@ v0.7.0: auf Nutzerwunsch wurden Ablage-Minimieren und Scrollrad-Erfassung
 vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
 dadurch eine Version weiter nach hinten.
 
+## [0.7.1] – 2026-09-05
+
+Scrollstrecke in Metern.
+
+### Neu
+- Die Scrollrad-Kachel zeigt jetzt zusätzlich eine „Scrollstrecke“ in Metern
+  (Format wie die Mausstrecke), die Zählung nach vorwärts/rückwärts bleibt
+  darunter erhalten.
+- `ScrollTracker.DistanceMeters`: rechnet Scrollrad-Ausschläge in eine
+  geschätzte Strecke um (typischer Radumfang ÷ übliche Raststufen pro
+  Umdrehung, ≈ 2,5 mm je Ausschlag).
+
+### Wichtiger Hinweis
+Anders als die Mausstrecke (die über die tatsächliche Bildschirm-DPI exakt
+berechnet wird) ist die Scrollstrecke eine **Schätzung** - Scrollräder haben
+kein genormtes Maß pro Raststufe. Deshalb steht in der Kachel ein kleines
+„ca.“, und der Tooltip weist ausdrücklich darauf hin.
+
 ## [0.7.0] – 2026-09-05
 
 Minimieren in die Ablage und Scrollrad-Erfassung.

@@ -7,17 +7,17 @@ auswertet: zurückgelegte Mausstrecke, Mausgeschwindigkeit, Klicks und
 Tastaturanschläge – automatisch im Hintergrund, ohne dass eine Messung manuell
 gestartet werden muss.
 
-![MouseMeter v0.7.0](docs/screenshot-v0.7.0.png)
+![MouseMeter v0.7.1](docs/screenshot-v0.7.1.png)
 
-## Aktueller Stand: v0.7.0
+## Aktueller Stand: v0.7.1
 
 Alle zehn Dashboard-Kacheln zeigen echte, live erfasste Werte: Mausstrecke,
 Geschwindigkeit, Durchschnitt, Rekord, Links-, Rechts-, Mittel- und
-Gesamtklicks, Tastaturanschläge sowie Scrollrad-Ausschläge. Beim Minimieren
-verschwindet MouseMeter aus der Taskleiste und legt sich in die Ablage neben
-der Uhr. Was in dieser Version enthalten ist, steht im
-[Changelog](CHANGELOG.md). Datenspeicherung über Programmstarts hinweg folgt
-mit der nächsten Version.
+Gesamtklicks, Tastaturanschläge sowie Scrollrad-Ausschläge inklusive
+geschätzter Scrollstrecke in Metern. Beim Minimieren verschwindet MouseMeter
+aus der Taskleiste und legt sich in die Ablage neben der Uhr. Was in dieser
+Version enthalten ist, steht im [Changelog](CHANGELOG.md). Datenspeicherung
+über Programmstarts hinweg folgt mit der nächsten Version.
 
 ## Aufbau
 

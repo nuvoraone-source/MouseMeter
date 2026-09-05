@@ -163,28 +163,43 @@
                                    Text="0" />
                     </Grid>
                 </Border>
-                <Border Style="{StaticResource Tile}">
+                <Border Style="{StaticResource Tile}"
+                        ToolTip="Geschätzte Strecke - kein genormtes Maß wie bei der Mausstrecke, siehe Info in den Einstellungen.">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Scrollrad"
-                                   Style="{StaticResource TileLabelText}"
-                                   VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,14,0">
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Scrollrad" Style="{StaticResource TileLabelText}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <TextBlock x:Name="ScrollDistanceValueText"
+                                           Style="{StaticResource TileValueText}" Text="0,00" />
+                                <TextBlock Text="m" Style="{StaticResource TileUnitText}" />
+                                <TextBlock Text="ca." FontSize="10" FontStyle="Italic"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Bottom" Margin="4,0,0,3" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                    VerticalAlignment="Bottom" Margin="0,0,10,1">
                             <TextBlock Text="▲" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
                                        VerticalAlignment="Center" Margin="0,0,4,0" />
                             <TextBlock x:Name="ScrollForwardValueText"
-                                       Style="{StaticResource TileValueText}" FontSize="16"
+                                       Style="{StaticResource TileLabelText}" FontSize="12"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
                                        Text="0" ToolTip="Vorwärts / hoch" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                    VerticalAlignment="Bottom" Margin="0,0,0,1">
                             <TextBlock Text="▼" FontSize="11" Foreground="{StaticResource TextMutedBrush}"
                                        VerticalAlignment="Center" Margin="0,0,4,0" />
                             <TextBlock x:Name="ScrollBackwardValueText"
-                                       Style="{StaticResource TileValueText}" FontSize="16"
+                                       Style="{StaticResource TileLabelText}" FontSize="12"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
                                        Text="0" ToolTip="Rückwärts / runter" />
                         </StackPanel>
                     </Grid>

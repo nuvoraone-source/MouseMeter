@@ -157,6 +157,7 @@ public partial class MainWindow : Window
 
         KeystrokesValueText.Text = Formatting.Count(_keystrokeTracker.TotalKeystrokes);
 
+        ScrollDistanceValueText.Text = Formatting.Distance(_scrollTracker.DistanceMeters);
         ScrollForwardValueText.Text = Formatting.Count(_scrollTracker.ForwardScrolls);
         ScrollBackwardValueText.Text = Formatting.Count(_scrollTracker.BackwardScrolls);
     }
