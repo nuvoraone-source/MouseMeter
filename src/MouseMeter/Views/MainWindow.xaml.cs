@@ -20,12 +20,13 @@ namespace MouseMeter.Views;
 /// live erfasst. Seit v0.8.0 übersteht die heutige Statistik einen Neustart
 /// von MouseMeter, und der persönliche Geschwindigkeitsrekord gilt dauerhaft.
 /// Seit v0.9.0 werten Woche/Monat/Jahr die gespeicherten Tagesdaten
-/// tatsächlich aus, statt nur den heutigen Tag zu wiederholen. Seit dieser
-/// Version (v0.10.0) gibt es dazu ein echtes Balkendiagramm mit wählbarer
-/// Kennzahl (Strecke/Klicks/Tastatur/Geschwindigkeit) - siehe
-/// <see cref="ChartSeriesBuilder"/> (Gesamtkonzept Abschnitt 17-22). Beim
-/// Minimieren verschwindet MouseMeter aus der Taskleiste und legt
-/// stattdessen ein Symbol in die Ablage neben der Uhr.
+/// tatsächlich aus. Seit v0.10.0 gibt es dazu ein echtes Balkendiagramm mit
+/// wählbarer Kennzahl und sichtbaren Werten je Balken. Seit dieser Version
+/// (v0.11.0) startet MouseMeter automatisch mit Windows (bis der Nutzer das
+/// in den Einstellungen abschaltet) und erklärt dort auch, welche Daten
+/// erfasst werden (Gesamtkonzept Abschnitt 5, 28, 30). Beim Minimieren
+/// verschwindet MouseMeter aus der Taskleiste und legt stattdessen ein
+/// Symbol in die Ablage neben der Uhr.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -93,6 +94,23 @@ public partial class MainWindow : Window
         // Stand bringen, BEVOR sie unten in OnLoaded gestartet werden - so
         // läuft die heutige Statistik nach einem Neustart nahtlos weiter.
         _appState = _dataStore.Load();
+
+        // Beim allerersten Start Autostart automatisch aktivieren (Abschnitt
+        // 5) - danach nie wieder anfassen, damit eine spätere Abwahl durch
+        // den Nutzer in den Einstellungen bestehen bleibt.
+        if (!_appState.AutostartInitialized)
+        {
+            try
+            {
+                AutostartManager.SetEnabled(true);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Kein Zugriff auf die Registry - Autostart bleibt einfach aus.
+            }
+            _appState.AutostartInitialized = true;
+        }
+
         _currentDay = DateOnly.FromDateTime(DateTime.Now);
         if (_appState.Days.TryGetValue(DayKey(_currentDay), out DailyStats? today))
         {
@@ -296,7 +314,7 @@ public partial class MainWindow : Window
         ChartBarsPanel.Columns = Math.Max(1, series.Count);
         ChartBarsPanel.Children.Clear();
 
-        const double chartHeight = 108;
+        const double chartHeight = 92;
 
         foreach (ChartDataPoint point in series)
         {
@@ -326,6 +344,24 @@ public partial class MainWindow : Window
             };
 
             var cell = new StackPanel();
+
+            // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert noch
+            // gut lesbar über den Tooltip hinaus direkt ins Diagramm; beim
+            // Monat (bis zu 31 Balken) würde das nur überlappen - dort bleibt
+            // es beim Tooltip.
+            if (series.Count <= 12)
+            {
+                cell.Children.Add(new TextBlock
+                {
+                    Text = Formatting.MetricValue(_selectedMetric, point.Value),
+                    FontFamily = (FontFamily)FindResource("UiFont"),
+                    FontSize = 9,
+                    Foreground = (Brush)FindResource("TextPrimaryBrush"),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 0, 0, 3),
+                });
+            }
+
             cell.Children.Add(barHost);
             cell.Children.Add(label);
 

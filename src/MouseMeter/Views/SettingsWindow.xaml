@@ -34,13 +34,44 @@
             </Grid>
 
             <TextBlock Style="{StaticResource BodyText}" Margin="0,10,0,0"
-                       Text="Tracking, Autostart und Datenverwaltung folgen in einer der nächsten Versionen." />
+                       Text="Tracking und Datenverwaltung folgen in einer der nächsten Versionen." />
+
+            <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
+
+            <TextBlock Text="Start" Style="{StaticResource TileLabelText}" />
+            <CheckBox x:Name="AutostartCheckBox"
+                      Content="MouseMeter mit Windows starten"
+                      Checked="OnAutostartToggled"
+                      Unchecked="OnAutostartToggled"
+                      Cursor="Hand"
+                      Margin="0,8,0,0"
+                      FontFamily="{StaticResource UiFont}"
+                      FontSize="12"
+                      Foreground="{StaticResource TextPrimaryBrush}" />
+
+            <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
+
+            <TextBlock Text="Datenschutz" Style="{StaticResource TileLabelText}" />
+            <Button x:Name="PrivacyButton"
+                    Content="Datenschutzerklärung anzeigen"
+                    Click="OnPrivacyClick"
+                    Cursor="Hand"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Margin="0,8,0,0"
+                    Padding="0,9"
+                    FontFamily="{StaticResource UiFont}"
+                    FontSize="12" FontWeight="SemiBold"
+                    Background="{StaticResource BgSurfaceAltBrush}"
+                    BorderBrush="{StaticResource StrokeBrush}"
+                    BorderThickness="1"
+                    Foreground="{StaticResource TextPrimaryBrush}" />
 
             <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
 
             <TextBlock Text="Support" Style="{StaticResource TileLabelText}" />
             <Button x:Name="ContactButton"
-                    Content="Kontakt zu nuvora aufnehmen"
+                    Content="Kontakt aufnehmen"
                     Click="OnContactClick"
                     Cursor="Hand"
                     HorizontalAlignment="Stretch"
@@ -53,6 +84,15 @@
                     BorderBrush="{StaticResource StrokeBrush}"
                     BorderThickness="1"
                     Foreground="{StaticResource TextPrimaryBrush}" />
+
+            <StackPanel HorizontalAlignment="Center" Margin="0,20,0,0">
+                <TextBlock Text="App entwickelt von Alexander Ziegemann"
+                           Style="{StaticResource FooterText}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="nuvora.one@gmail.com"
+                           Style="{StaticResource FooterText}"
+                           HorizontalAlignment="Center" Margin="0,2,0,0" />
+            </StackPanel>
 
         </StackPanel>
     </Border>

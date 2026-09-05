@@ -7,6 +7,34 @@ vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
 dadurch eine Version weiter nach hinten - auf v0.8.0, die Zeitraum-Auswertung
 auf v0.9.0 und die Diagramme auf v0.10.0.
 
+## [0.11.0] – 2026-09-05
+
+Einstellungen, Autostart und Datenschutzerklärung.
+
+### Neu
+- Automatischer Windows-Start (Abschnitt 5): Beim allerersten Programmstart
+  aktiviert MouseMeter den Autostart von selbst über den Registry-Autostart-
+  Schlüssel des Benutzerprofils (`AutostartManager`, keine Adminrechte
+  nötig). Der Nutzer kann das jederzeit in den Einstellungen abschalten -
+  diese Wahl wird danach nicht mehr überschrieben.
+- Diagramm-Balken zeigen den genauen Wert jetzt direkt über dem Balken (bei
+  Woche/Jahr mit bis zu 12 Balken); beim Monat mit bis zu 31 Balken bleibt es
+  beim Tooltip, um Überlappungen zu vermeiden.
+- Neue Datenschutzerklärung in den Einstellungen (`PrivacyWindow`): erklärt
+  in Klartext, was gespeichert wird, was ausdrücklich nicht gespeichert wird
+  (kein Text, keine Taste, keine Fensterinhalte) und wo die Daten liegen.
+- Der Kontaktweg zu nuvora ist jetzt zusätzlich in den Einstellungen
+  verlinkt.
+- Fußzeile der Einstellungen: „App entwickelt von Alexander Ziegemann“ mit
+  Kontakt-E-Mail darunter.
+
+### Live getestet
+Ersten Start mit leerem Datenbestand simuliert: Autostart wurde automatisch
+im Registry-Schlüssel angelegt. Einstellungen geöffnet, Haken bestätigt
+gesetzt, Häkchen entfernt - Registry-Eintrag wurde daraufhin korrekt wieder
+gelöscht. Datenschutzerklärung geöffnet und Diagramm-Wertelabels mit
+Testdaten geprüft.
+
 ## [0.10.0] – 2026-09-05
 
 Diagramme.
