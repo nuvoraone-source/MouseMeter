@@ -7,13 +7,14 @@ auswertet: zurückgelegte Mausstrecke, Mausgeschwindigkeit, Klicks und
 Tastaturanschläge – automatisch im Hintergrund, ohne dass eine Messung manuell
 gestartet werden muss.
 
-![MouseMeter v0.1.0](docs/screenshot-v0.1.0.png)
+![MouseMeter v0.2.0](docs/screenshot-v0.2.0.png)
 
-## Aktueller Stand: v0.1.0
+## Aktueller Stand: v0.2.0
 
-Grundgerüst der Anwendung – Programmstart, Startbildschirm und Hauptfenster.
-Die eigentliche Erfassung folgt ab v0.3.0. Was in dieser Version enthalten ist,
-steht im [Changelog](CHANGELOG.md).
+Dashboard mit den neun Live-Kacheln, Zeitraum-Auswahl und Diagrammplatzhalter.
+Die Kacheln zeigen noch durchgehend Nullwerte – die eigentliche Erfassung
+folgt ab v0.3.0. Was in dieser Version enthalten ist, steht im
+[Changelog](CHANGELOG.md).
 
 ## Aufbau
 

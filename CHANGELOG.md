@@ -3,6 +3,27 @@
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36).
 
+## [0.2.0] – 2026-09-05
+
+Dashboard und vollständige Oberfläche.
+
+### Neu
+- Live-Dashboard mit den neun Kacheln aus dem Konzept (§7): Mausstrecke,
+  Geschwindigkeit, Durchschnitt, Rekord, Links-/Rechts-/Mittelklicks,
+  Gesamtklicks und Tastaturanschläge. Zeigt in dieser Version durchgehend
+  Nullwerte im endgültigen Zahlenformat (Messwerte mit zwei Nachkommastellen,
+  Zähler ohne).
+- Zeitraum-Auswahl (Tag/Woche/Monat/Jahr) als Segmentleiste oberhalb des
+  Dashboards.
+- Platzhalter für die Diagrammfläche, reagiert bereits auf die gewählte
+  Zeitraum-Ansicht.
+- Einstellungsfenster (bisher nur mit Support-Kontakt gefüllt, Tracking/
+  Autostart/Datenverwaltung folgen mit v0.10.0).
+- Kontaktweg zu nuvora: kleiner, dezenter „nuvora“-Link mittig in der
+  Statusleiste sowie zusätzlich über die Einstellungen erreichbar. Öffnet ein
+  Kontaktfenster mit der Support-Adresse (Kopieren oder Standard-Mailprogramm
+  öffnen) - MouseMeter versendet dabei nichts selbst.
+
 ## [0.1.0] – 2026-09-05
 
 Grundprojekt, Programmstart und Startbildschirm.

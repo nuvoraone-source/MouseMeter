@@ -111,4 +111,79 @@
     <!-- Zahnrad als Vektorpfad (24x24-Raster) -->
     <PathGeometry x:Key="GearGeometry" FillRule="EvenOdd" Figures="M 22.37,9.8 A 10.6,10.6 0 0 1 22.37,14.2 L 19.7,14.5 A 8.1,8.1 0 0 1 19.22,15.68 L 20.89,17.77 A 10.6,10.6 0 0 1 17.77,20.89 L 15.68,19.22 A 8.1,8.1 0 0 1 14.5,19.7 L 14.2,22.37 A 10.6,10.6 0 0 1 9.8,22.37 L 9.5,19.7 A 8.1,8.1 0 0 1 8.32,19.22 L 6.23,20.89 A 10.6,10.6 0 0 1 3.11,17.77 L 4.78,15.68 A 8.1,8.1 0 0 1 4.3,14.5 L 1.63,14.2 A 10.6,10.6 0 0 1 1.63,9.8 L 4.3,9.5 A 8.1,8.1 0 0 1 4.78,8.32 L 3.11,6.23 A 10.6,10.6 0 0 1 6.23,3.11 L 8.32,4.78 A 8.1,8.1 0 0 1 9.5,4.3 L 9.8,1.63 A 10.6,10.6 0 0 1 14.2,1.63 L 14.5,4.3 A 8.1,8.1 0 0 1 15.68,4.78 L 17.77,3.11 A 10.6,10.6 0 0 1 20.89,6.23 L 19.22,8.32 A 8.1,8.1 0 0 1 19.7,9.5 L 22.37,9.8 Z M 15.6,12 A 3.6,3.6 0 0 1 8.4,12 A 3.6,3.6 0 0 1 15.6,12 Z" />
 
+    <!-- ==================== Dashboard-Kacheln ==================== -->
+    <Style x:Key="TileLabelText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+    </Style>
+
+    <Style x:Key="TileValueText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="TileUnitText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Margin" Value="4,0,0,2" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+
+    <Style x:Key="Tile" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="Padding" Value="14,12" />
+    </Style>
+
+    <!-- Zeitraum-Auswahl: als RadioButton gruppiert, optisch als Segmentleiste -->
+    <Style x:Key="PeriodButton" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Padding" Value="18,6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bg" Background="Transparent" CornerRadius="7">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource BgSurfaceAltBrush}" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsChecked" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Dezenter, klickbarer Text (z. B. der Herstellername in der Statusleiste) -->
+    <Style x:Key="LinkText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
 </ResourceDictionary>
