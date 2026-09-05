@@ -7,6 +7,33 @@ vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
 dadurch eine Version weiter nach hinten - auf v0.8.0, die Zeitraum-Auswertung
 auf v0.9.0 und die Diagramme auf v0.10.0.
 
+## [1.0.0] – 2026-09-05
+
+Stabile erste vollständige Version.
+
+Keine neuen Funktionen gegenüber v0.11.0 - dieser Meilenstein markiert den
+Abschluss des in §36 des Gesamtkonzepts skizzierten Entwicklungsplans.
+MouseMeter erfasst und speichert jetzt dauerhaft:
+
+- Mausstrecke, aktuelle und durchschnittliche Geschwindigkeit, persönlicher
+  Geschwindigkeitsrekord
+- Links-, Rechts-, Mittel- und Gesamtklicks
+- Tastaturanschläge (nur die Anzahl, nie der Text)
+- Scrollrad-Ausschläge inklusive geschätzter Scrollstrecke
+- Auswertung nach Tag, Woche, Monat und Jahr mit Balkendiagramm
+- Automatischer Windows-Start, Ablage-Minimierung, Datenschutzerklärung
+
+Alles läuft vollständig lokal, ohne Übertragung an externe Server, portabel
+in einer einzelnen EXE-Datei.
+
+### Bekannte, bewusste Einschränkungen für spätere Versionen
+- Kein Tagesverlauf als Diagramm (nur ein Wert pro Tag wird gespeichert).
+- Kein manuelles Zurücksetzen der Statistik über die Einstellungen (nur per
+  Löschen der Datendatei).
+- Speicherort ist nicht in den Einstellungen wählbar.
+- Rekord und Fortschritt gelten pro Windows-Benutzerprofil, nicht
+  geräteübergreifend.
+
 ## [0.11.0] – 2026-09-05
 
 Einstellungen, Autostart und Datenschutzerklärung.
