@@ -3,6 +3,22 @@
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36).
 
+## [0.5.0] – 2026-09-05
+
+Mausklick-Erfassung.
+
+### Neu
+- Der systemweite Maushook (`GlobalMouseHook`) erkennt jetzt zusätzlich
+  Linksklicks, Rechtsklicks und Mittelklicks, unabhängig vom Fensterfokus.
+- `MouseClickTracker` zählt die drei Klickarten getrennt.
+- Die Kacheln „Linksklicks“, „Rechtsklicks“, „Mittelklicks“ und
+  „Gesamtklicks“ (Summe der drei) zeigen jetzt die echten, live gezählten
+  Werte als ganze Zahlen ohne Nachkommastellen (Abschnitt 33 des Konzepts).
+
+### Bekannte Einschränkung
+Die Klickzähler gelten nur für die laufende Sitzung und beginnen bei jedem
+Programmstart wieder bei Null - dauerhafte Speicherung folgt mit v0.7.0.
+
 ## [0.4.0] – 2026-09-05
 
 Geschwindigkeitsmessung und Rekord.

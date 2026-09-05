@@ -2,20 +2,31 @@
 
 namespace MouseMeter.Infrastructure;
 
+/// <summary>Welche Maustaste ein Klick ausgelöst hat.</summary>
+public enum MouseButtonKind
+{
+    Left,
+    Right,
+    Middle,
+}
+
 /// <summary>
 /// Systemweiter Low-Level-Mausposition-Hook (WH_MOUSE_LL). Meldet jede
-/// Mausbewegung unabhängig davon, welches Fenster gerade den Fokus hat -
-/// das ist nötig, damit MouseMeter die Aktivität auch dann erfasst, wenn
-/// eine andere Anwendung im Vordergrund läuft (Gesamtkonzept Abschnitt 1
-/// und 31: automatische Erfassung im Hintergrund).
+/// Mausbewegung und jeden Tastendruck unabhängig davon, welches Fenster
+/// gerade den Fokus hat - das ist nötig, damit MouseMeter die Aktivität
+/// auch dann erfasst, wenn eine andere Anwendung im Vordergrund läuft
+/// (Gesamtkonzept Abschnitt 1 und 31: automatische Erfassung im Hintergrund).
 ///
-/// Es werden ausschließlich Bildschirmkoordinaten gelesen - keine
-/// Fensterinhalte, keine Texteingaben.
+/// Es werden ausschließlich Bildschirmkoordinaten und der gedrückte
+/// Maustastentyp gelesen - keine Fensterinhalte, keine Texteingaben.
 /// </summary>
 public sealed class GlobalMouseHook : IDisposable
 {
     private const int WhMouseLl = 14;
     private const int WmMouseMove = 0x0200;
+    private const int WmLButtonDown = 0x0201;
+    private const int WmRButtonDown = 0x0204;
+    private const int WmMButtonDown = 0x0207;
 
     private delegate nint LowLevelMouseProc(int nCode, nint wParam, nint lParam);
 
@@ -57,6 +68,9 @@ public sealed class GlobalMouseHook : IDisposable
     /// <summary>Aktuelle Position des Mauszeigers in Bildschirm-Pixeln.</summary>
     public event Action<int, int>? MouseMoved;
 
+    /// <summary>Ausgelöst, sobald eine Maustaste gedrückt wird.</summary>
+    public event Action<MouseButtonKind>? ButtonDown;
+
     public GlobalMouseHook()
     {
         _proc = HookCallback;
@@ -89,10 +103,24 @@ public sealed class GlobalMouseHook : IDisposable
 
     private nint HookCallback(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= 0 && wParam == WmMouseMove)
+        if (nCode >= 0)
         {
-            var data = Marshal.PtrToStructure<MsLlHookStruct>(lParam);
-            MouseMoved?.Invoke(data.Pt.X, data.Pt.Y);
+            switch ((int)wParam)
+            {
+                case WmMouseMove:
+                    var data = Marshal.PtrToStructure<MsLlHookStruct>(lParam);
+                    MouseMoved?.Invoke(data.Pt.X, data.Pt.Y);
+                    break;
+                case WmLButtonDown:
+                    ButtonDown?.Invoke(MouseButtonKind.Left);
+                    break;
+                case WmRButtonDown:
+                    ButtonDown?.Invoke(MouseButtonKind.Right);
+                    break;
+                case WmMButtonDown:
+                    ButtonDown?.Invoke(MouseButtonKind.Middle);
+                    break;
+            }
         }
 
         return CallNextHookEx(_hookHandle, nCode, wParam, lParam);

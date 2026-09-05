@@ -13,9 +13,9 @@ namespace MouseMeter.Views;
 /// den neun Live-Kacheln, Diagrammfläche und Statusleiste.
 ///
 /// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0)
-/// werden bereits live erfasst. Klicks und Tastaturanschläge folgen in den
-/// nächsten Versionen (siehe Gesamtkonzept Abschnitt 36) und zeigen bis
-/// dahin weiterhin Null.
+/// sowie Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0) werden bereits
+/// live erfasst. Tastaturanschläge folgen in der nächsten Version (siehe
+/// Gesamtkonzept Abschnitt 36) und zeigen bis dahin weiterhin Null.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     private static readonly TimeSpan DisplayRefreshInterval = TimeSpan.FromMilliseconds(200);
 
     private readonly MouseDistanceTracker _distanceTracker = new();
+    private readonly MouseClickTracker _clickTracker = new();
     private readonly DispatcherTimer _displayTimer;
     private readonly Stopwatch _sampleStopwatch = new();
 
@@ -59,6 +60,7 @@ public partial class MainWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         _distanceTracker.Start();
+        _clickTracker.Start();
         _sampleStopwatch.Start();
         _displayTimer.Start();
 
@@ -70,14 +72,15 @@ public partial class MainWindow : Window
     {
         _displayTimer.Stop();
         _distanceTracker.Dispose();
+        _clickTracker.Dispose();
     }
 
     /// <summary>
     /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln.
-    /// Mausstrecke, Geschwindigkeit, Durchschnitt und Rekord stammen aus der
-    /// echten Erfassung. Klicks und Tastaturanschläge zeigen noch Nullwerte,
-    /// bis ihre Erfassung in einer späteren Version dazukommt - aber bereits
-    /// im endgültigen Zahlenformat (Abschnitt 33).
+    /// Mausstrecke, Geschwindigkeit, Durchschnitt, Rekord und alle Klicks
+    /// stammen aus der echten Erfassung. Tastaturanschläge zeigen noch
+    /// Nullwerte, bis ihre Erfassung in einer späteren Version dazukommt -
+    /// aber bereits im endgültigen Zahlenformat (Abschnitt 33).
     /// </summary>
     private void RenderDashboard()
     {
@@ -103,10 +106,10 @@ public partial class MainWindow : Window
         AverageValueText.Text = Formatting.Speed(averageSpeed);
         RecordValueText.Text = Formatting.Speed(_recordSpeedMetersPerSecond);
 
-        LeftClicksValueText.Text = Formatting.Count(0);
-        RightClicksValueText.Text = Formatting.Count(0);
-        MiddleClicksValueText.Text = Formatting.Count(0);
-        TotalClicksValueText.Text = Formatting.Count(0);
+        LeftClicksValueText.Text = Formatting.Count(_clickTracker.LeftClicks);
+        RightClicksValueText.Text = Formatting.Count(_clickTracker.RightClicks);
+        MiddleClicksValueText.Text = Formatting.Count(_clickTracker.MiddleClicks);
+        TotalClicksValueText.Text = Formatting.Count(_clickTracker.TotalClicks);
 
         KeystrokesValueText.Text = Formatting.Count(0);
     }

@@ -7,14 +7,14 @@ auswertet: zurückgelegte Mausstrecke, Mausgeschwindigkeit, Klicks und
 Tastaturanschläge – automatisch im Hintergrund, ohne dass eine Messung manuell
 gestartet werden muss.
 
-![MouseMeter v0.4.0](docs/screenshot-v0.4.0.png)
+![MouseMeter v0.5.0](docs/screenshot-v0.5.0.png)
 
-## Aktueller Stand: v0.4.0
+## Aktueller Stand: v0.5.0
 
-Mausstrecke, Geschwindigkeit, Durchschnitt und Rekord werden jetzt live
-erfasst und angezeigt. Klicks und Tastaturanschläge folgen planmäßig mit den
-nächsten Versionen. Was in dieser Version enthalten ist, steht im
-[Changelog](CHANGELOG.md).
+Mausstrecke, Geschwindigkeit, Durchschnitt, Rekord sowie Links-, Rechts-,
+Mittel- und Gesamtklicks werden jetzt live erfasst und angezeigt.
+Tastaturanschläge folgen planmäßig mit der nächsten Version. Was in dieser
+Version enthalten ist, steht im [Changelog](CHANGELOG.md).
 
 ## Aufbau
 
