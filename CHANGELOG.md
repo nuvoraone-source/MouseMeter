@@ -3,6 +3,27 @@
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36).
 
+## [0.3.0] – 2026-09-05
+
+Mausbewegung und Mausstrecke.
+
+### Neu
+- Systemweiter Low-Level-Maushook (`GlobalMouseHook`): erfasst die
+  Mausposition unabhängig davon, welches Fenster gerade den Fokus hat, damit
+  die Erfassung wie im Konzept vorgesehen automatisch im Hintergrund läuft.
+- `MouseDistanceTracker` rechnet die Pixelbewegung über die Bildschirm-DPI in
+  eine physische Strecke in Metern um und summiert sie laufend auf.
+- Die Kachel „Mausstrecke“ zeigt jetzt den echten, live berechneten Wert
+  (Aktualisierung alle 200 ms). Der Status wechselt automatisch auf
+  „Tracking ● Aktiv“, sobald die Erfassung läuft.
+- Kontakt-E-Mail-Adresse korrigiert: `nuvora.one@gmail.com` (vorherige
+  Version enthielt versehentlich eine falsche Adresse).
+
+### Bekannte Einschränkung
+Geschwindigkeit, Durchschnitt und Rekord bleiben bewusst auf Null - ihre
+Berechnung folgt planmäßig mit v0.4.0. Die zurückgelegte Strecke wird nur für
+die laufende Sitzung gezählt; dauerhafte Speicherung folgt mit v0.7.0.
+
 ## [0.2.0] – 2026-09-05
 
 Dashboard und vollständige Oberfläche.

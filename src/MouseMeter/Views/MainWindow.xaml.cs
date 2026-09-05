@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using MouseMeter.Infrastructure;
 
 namespace MouseMeter.Views;
@@ -9,12 +11,22 @@ namespace MouseMeter.Views;
 /// Hauptfenster von MouseMeter: Kopfbereich, Zeitraum-Auswahl, Dashboard mit
 /// den neun Live-Kacheln, Diagrammfläche und Statusleiste.
 ///
-/// Die Kacheln zeigen in dieser Version ausschließlich Nullwerte - die
-/// eigentliche Erfassung von Mausbewegung, Klicks und Tastatur folgt ab
-/// v0.3.0 (siehe Gesamtkonzept Abschnitt 36).
+/// Ab dieser Version (v0.3.0) wird die Mausbewegung tatsächlich erfasst und
+/// die zurückgelegte Strecke live berechnet. Geschwindigkeit, Durchschnitt,
+/// Rekord, Klicks und Tastaturanschläge folgen in den nächsten Versionen
+/// (siehe Gesamtkonzept Abschnitt 36) und zeigen bis dahin weiterhin Null.
 /// </summary>
 public partial class MainWindow : Window
 {
+    // Aktualisierungsintervall der Anzeige. Die Erfassung selbst laeuft ueber
+    // den systemweiten Hook in Echtzeit - fuer die Oberflaeche reicht ein
+    // deutlich selteneres Neuzeichnen, um die UI nicht unnoetig zu belasten
+    // (Abschnitt 31, ressourcenschonender Betrieb).
+    private static readonly TimeSpan DisplayRefreshInterval = TimeSpan.FromMilliseconds(200);
+
+    private readonly MouseDistanceTracker _distanceTracker = new();
+    private readonly DispatcherTimer _displayTimer;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -24,20 +36,39 @@ public partial class MainWindow : Window
         Title = $"{AppInfo.Name} {AppInfo.DisplayVersion}";
         VersionText.Text = AppInfo.DisplayVersion;
 
-        // Die Erfassung selbst folgt ab v0.3.0; bis dahin meldet der Status ehrlich "Inaktiv".
-        StatusText.Text = "Inaktiv";
+        _displayTimer = new DispatcherTimer { Interval = DisplayRefreshInterval };
+        _displayTimer.Tick += (_, _) => RenderDashboard();
 
         RenderDashboard();
+
+        Loaded += OnLoaded;
+        Closed += OnClosed;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        _distanceTracker.Start();
+        _displayTimer.Start();
+
+        StatusText.Text = "Aktiv";
+        StatusDot.Fill = (Brush)FindResource("StatusOkBrush");
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _displayTimer.Stop();
+        _distanceTracker.Dispose();
     }
 
     /// <summary>
     /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln.
-    /// Solange keine echte Erfassung existiert, sind das durchgehend Nullwerte -
-    /// aber bereits im endgültigen Zahlenformat (Abschnitt 33 des Konzepts).
+    /// Mausstrecke stammt aus der echten Erfassung, alle übrigen Kacheln
+    /// zeigen noch Nullwerte, bis ihre Erfassung in einer späteren Version
+    /// dazukommt - aber bereits im endgültigen Zahlenformat (Abschnitt 33).
     /// </summary>
     private void RenderDashboard()
     {
-        DistanceValueText.Text = Formatting.Distance(0);
+        DistanceValueText.Text = Formatting.Distance(_distanceTracker.TotalDistanceMeters);
         SpeedValueText.Text = Formatting.Speed(0);
         AverageValueText.Text = Formatting.Speed(0);
         RecordValueText.Text = Formatting.Speed(0);

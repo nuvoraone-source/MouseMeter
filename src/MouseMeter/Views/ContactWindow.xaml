@@ -45,7 +45,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="EmailText"
                                Grid.Column="0"
-                               Text="nuvoraone@gmx.de"
+                               Text="nuvora.one@gmail.com"
                                FontFamily="{StaticResource UiFont}"
                                FontSize="13" FontWeight="SemiBold"
                                Foreground="{StaticResource TextPrimaryBrush}"

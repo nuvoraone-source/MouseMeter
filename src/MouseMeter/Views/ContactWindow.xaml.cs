@@ -11,7 +11,7 @@ namespace MouseMeter.Views;
 /// </summary>
 public partial class ContactWindow : Window
 {
-    private const string SupportEmail = "nuvoraone@gmx.de";
+    private const string SupportEmail = "nuvora.one@gmail.com";
 
     public ContactWindow()
     {
