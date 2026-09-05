@@ -26,17 +26,42 @@ public sealed class MouseDistanceTracker : IDisposable
     private bool _hasLastPosition;
     private int _lastX;
     private int _lastY;
+    private TimeSpan _seedElapsed = TimeSpan.Zero;
 
-    /// <summary>Seit Start dieser Sitzung insgesamt zurückgelegte Strecke in Metern.</summary>
+    /// <summary>Heute insgesamt zurückgelegte Strecke in Metern (inklusive vor einem Neustart erfasster Werte).</summary>
     public double TotalDistanceMeters { get; private set; }
 
-    /// <summary>Seit <see cref="Start"/> vergangene Zeit - Grundlage für die Durchschnittsgeschwindigkeit.</summary>
-    public TimeSpan Elapsed => _runtime.Elapsed;
+    /// <summary>
+    /// Heutige Erfassungsdauer - Grundlage für die Durchschnittsgeschwindigkeit.
+    /// Setzt sich aus einem beim Programmstart geladenen Sockelwert (falls die
+    /// Anwendung heute schon einmal lief) und der Laufzeit dieser Sitzung zusammen.
+    /// </summary>
+    public TimeSpan Elapsed => _seedElapsed + _runtime.Elapsed;
 
     public MouseDistanceTracker()
     {
         _metersPerPixel = MetersPerInch / ReadSystemDpi();
         _hook.MouseMoved += OnMouseMoved;
+    }
+
+    /// <summary>
+    /// Setzt Strecke und Erfassungsdauer auf zuvor gespeicherte Werte, bevor
+    /// <see cref="Start"/> aufgerufen wird - damit läuft die heutige Statistik
+    /// nach einem Neustart von MouseMeter nahtlos weiter, statt bei Null
+    /// anzufangen (Gesamtkonzept Abschnitt 24).
+    /// </summary>
+    public void Seed(double distanceMeters, TimeSpan elapsed)
+    {
+        TotalDistanceMeters = distanceMeters;
+        _seedElapsed = elapsed;
+    }
+
+    /// <summary>Setzt die heutige Strecke und Erfassungsdauer zurück (Tageswechsel, Abschnitt 25).</summary>
+    public void ResetForNewDay()
+    {
+        TotalDistanceMeters = 0;
+        _seedElapsed = TimeSpan.Zero;
+        _runtime.Restart();
     }
 
     public void Start()

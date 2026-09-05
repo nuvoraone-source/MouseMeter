@@ -1,0 +1,17 @@
+﻿namespace MouseMeter.Infrastructure.Storage;
+
+/// <summary>
+/// Der gesamte dauerhaft gespeicherte Zustand von MouseMeter: die
+/// Tagesstatistiken (Schlüssel im Format "yyyy-MM-dd") sowie der
+/// sitzungsübergreifende persönliche Geschwindigkeitsrekord.
+///
+/// Der Rekord gilt bewusst nicht pro Tag, sondern für immer - siehe
+/// Gesamtkonzept Abschnitt 11: "Der Wert soll [...] als persönlicher
+/// Geschwindigkeitsrekord gespeichert werden."
+/// </summary>
+public sealed class AppState
+{
+    public double AllTimeRecordSpeedMetersPerSecond { get; set; }
+
+    public Dictionary<string, DailyStats> Days { get; set; } = new();
+}

@@ -5,18 +5,20 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using MouseMeter.Infrastructure;
+using MouseMeter.Infrastructure.Storage;
 
 namespace MouseMeter.Views;
 
 /// <summary>
 /// Hauptfenster von MouseMeter: Kopfbereich, Zeitraum-Auswahl, Dashboard mit
-/// den neun Live-Kacheln, Diagrammfläche und Statusleiste.
+/// den zehn Live-Kacheln, Diagrammfläche und Statusleiste.
 ///
 /// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0),
 /// Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0), Tastaturanschläge
-/// (v0.6.0) sowie Scrollrad-Ausschläge (v0.7.0) werden bereits live erfasst -
-/// alle Dashboard-Kacheln zeigen damit echte Werte (Gesamtkonzept Abschnitt
-/// 36, mit vorgezogenem Ablage-Minimieren und Scrollrad-Erfassung in v0.7.0).
+/// (v0.6.0), Scrollrad-Ausschläge (v0.7.0) und deren Strecke (v0.7.1) werden
+/// live erfasst. Seit dieser Version (v0.8.0) übersteht die heutige
+/// Statistik einen Neustart von MouseMeter, und der persönliche
+/// Geschwindigkeitsrekord gilt dauerhaft (Gesamtkonzept Abschnitt 24-26).
 /// Beim Minimieren verschwindet MouseMeter aus der Taskleiste und legt
 /// stattdessen ein Symbol in die Ablage neben der Uhr.
 /// </summary>
@@ -29,20 +31,30 @@ public partial class MainWindow : Window
     // als Messfenster fuer die aktuelle Geschwindigkeit.
     private static readonly TimeSpan DisplayRefreshInterval = TimeSpan.FromMilliseconds(200);
 
+    // Wie oft der aktuelle Stand auf die Festplatte geschrieben wird. Selten
+    // genug, um keine unnoetigen Schreibzugriffe zu erzeugen, haeufig genug,
+    // um bei einem Absturz nur wenige Sekunden Daten zu verlieren.
+    private static readonly TimeSpan PersistInterval = TimeSpan.FromSeconds(5);
+
     private readonly MouseDistanceTracker _distanceTracker = new();
     private readonly MouseClickTracker _clickTracker = new();
     private readonly KeystrokeTracker _keystrokeTracker = new();
     private readonly ScrollTracker _scrollTracker = new();
     private readonly TrayIconController _trayIcon;
     private readonly DispatcherTimer _displayTimer;
+    private readonly DispatcherTimer _persistTimer;
     private readonly Stopwatch _sampleStopwatch = new();
+
+    private readonly DataStore _dataStore = new();
+    private readonly AppState _appState;
+    private DateOnly _currentDay;
 
     // Momentaufnahme der Strecke beim letzten Neuzeichnen - Grundlage fuer
     // die aktuelle Geschwindigkeit (Distanz-Differenz je Messfenster).
     private double _lastSampleDistanceMeters;
 
-    // Persönlicher Geschwindigkeitsrekord dieser Sitzung. Eine dauerhafte
-    // Speicherung über Programmstarts hinweg folgt mit v0.7.0.
+    // Persönlicher Geschwindigkeitsrekord - gilt dauerhaft, nicht nur fuer
+    // den aktuellen Tag oder die laufende Sitzung (Abschnitt 11).
     private double _recordSpeedMetersPerSecond;
 
     public MainWindow()
@@ -57,6 +69,9 @@ public partial class MainWindow : Window
         _displayTimer = new DispatcherTimer { Interval = DisplayRefreshInterval };
         _displayTimer.Tick += (_, _) => RenderDashboard();
 
+        _persistTimer = new DispatcherTimer { Interval = PersistInterval };
+        _persistTimer.Tick += (_, _) => { HandleDayRollover(); SaveState(); };
+
         // Dasselbe Symbol wie das Anwendungsfenster - direkt aus der laufenden
         // EXE gelesen, kein separates Laden der Ressourcendatei nötig. Der
         // Controller übernimmt den Besitz und gibt das Icon-Handle erst beim
@@ -66,12 +81,29 @@ public partial class MainWindow : Window
         _trayIcon.RestoreRequested += OnTrayRestoreRequested;
         _trayIcon.ExitRequested += OnTrayExitRequested;
 
+        // Gespeicherten Zustand laden und die Tracker damit auf den heutigen
+        // Stand bringen, BEVOR sie unten in OnLoaded gestartet werden - so
+        // läuft die heutige Statistik nach einem Neustart nahtlos weiter.
+        _appState = _dataStore.Load();
+        _currentDay = DateOnly.FromDateTime(DateTime.Now);
+        if (_appState.Days.TryGetValue(DayKey(_currentDay), out DailyStats? today))
+        {
+            _distanceTracker.Seed(today.DistanceMeters, TimeSpan.FromSeconds(today.ActiveSeconds));
+            _clickTracker.Seed(today.LeftClicks, today.RightClicks, today.MiddleClicks);
+            _keystrokeTracker.Seed(today.Keystrokes);
+            _scrollTracker.Seed(today.ScrollForward, today.ScrollBackward);
+        }
+        _lastSampleDistanceMeters = _distanceTracker.TotalDistanceMeters;
+        _recordSpeedMetersPerSecond = _appState.AllTimeRecordSpeedMetersPerSecond;
+
         RenderDashboard();
 
         Loaded += OnLoaded;
         StateChanged += OnStateChanged;
         Closed += OnClosed;
     }
+
+    private static string DayKey(DateOnly day) => day.ToString("yyyy-MM-dd");
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -81,9 +113,53 @@ public partial class MainWindow : Window
         _scrollTracker.Start();
         _sampleStopwatch.Start();
         _displayTimer.Start();
+        _persistTimer.Start();
 
         StatusText.Text = "Aktiv";
         StatusDot.Fill = (Brush)FindResource("StatusOkBrush");
+    }
+
+    /// <summary>
+    /// Erkennt den Wechsel auf einen neuen Kalendertag (Gesamtkonzept
+    /// Abschnitt 25) und schreibt in diesem Fall zunächst den bisherigen Tag
+    /// abschließend fest, bevor alle Tageszähler automatisch auf Null
+    /// zurückgesetzt werden. Der persönliche Rekord bleibt davon unberührt.
+    /// </summary>
+    private void HandleDayRollover()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        if (today == _currentDay)
+        {
+            return;
+        }
+
+        SaveState();
+
+        _currentDay = today;
+        _distanceTracker.ResetForNewDay();
+        _clickTracker.ResetForNewDay();
+        _keystrokeTracker.ResetForNewDay();
+        _scrollTracker.ResetForNewDay();
+        _lastSampleDistanceMeters = 0;
+    }
+
+    /// <summary>Schreibt den aktuellen Stand des heutigen Tages und den Rekord auf die Festplatte.</summary>
+    private void SaveState()
+    {
+        _appState.Days[DayKey(_currentDay)] = new DailyStats
+        {
+            DistanceMeters = _distanceTracker.TotalDistanceMeters,
+            ActiveSeconds = _distanceTracker.Elapsed.TotalSeconds,
+            LeftClicks = _clickTracker.LeftClicks,
+            RightClicks = _clickTracker.RightClicks,
+            MiddleClicks = _clickTracker.MiddleClicks,
+            Keystrokes = _keystrokeTracker.TotalKeystrokes,
+            ScrollForward = _scrollTracker.ForwardScrolls,
+            ScrollBackward = _scrollTracker.BackwardScrolls,
+        };
+        _appState.AllTimeRecordSpeedMetersPerSecond = _recordSpeedMetersPerSecond;
+
+        _dataStore.Save(_appState);
     }
 
     // Beim Minimieren verschwindet MouseMeter komplett aus der Taskleiste und
@@ -113,6 +189,13 @@ public partial class MainWindow : Window
     private void OnClosed(object? sender, EventArgs e)
     {
         _displayTimer.Stop();
+        _persistTimer.Stop();
+
+        // Letzten Stand noch sichern, damit beim naechsten Start nichts von
+        // den Sekunden seit dem letzten periodischen Speichern fehlt.
+        HandleDayRollover();
+        SaveState();
+
         _distanceTracker.Dispose();
         _clickTracker.Dispose();
         _keystrokeTracker.Dispose();
@@ -164,8 +247,9 @@ public partial class MainWindow : Window
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)
     {
-        // Noch ohne gespeicherte Historie: die Auswahl wird bereits entgegengenommen,
-        // wirkt sich aber erst ab v0.7.0/v0.8.0 (Datenspeicherung, Zeiträume) aus.
+        // Woche/Monat/Jahr lesen noch nicht aus der gespeicherten Historie:
+        // die Auswahl wird bereits entgegengenommen, die eigentliche
+        // Auswertung über mehrere Tage folgt mit der nächsten Version.
         if (sender is not RadioButton { IsChecked: true } selected || ChartPlaceholderText is null)
         {
             return;
@@ -179,8 +263,7 @@ public partial class MainWindow : Window
             _ => "den Tag",
         };
 
-        ChartPlaceholderText.Text =
-            $"Diagramm für {period} folgt, sobald echte Messwerte erfasst und gespeichert werden.";
+        ChartPlaceholderText.Text = $"Diagramm für {period} folgt in einer der nächsten Versionen.";
     }
 
     private void OnSettingsClick(object sender, RoutedEventArgs e)

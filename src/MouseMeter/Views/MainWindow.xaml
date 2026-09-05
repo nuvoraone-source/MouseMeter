@@ -213,7 +213,7 @@
                                Style="{StaticResource BodyText}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                TextAlignment="Center" MaxWidth="380"
-                               Text="Diagramm für den Tagesverlauf folgt, sobald der Verlauf dauerhaft gespeichert wird." />
+                               Text="Diagramm für den Tagesverlauf folgt in einer der nächsten Versionen." />
                 </Grid>
             </Border>
 

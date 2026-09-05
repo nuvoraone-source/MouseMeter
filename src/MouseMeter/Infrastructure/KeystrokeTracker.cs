@@ -21,6 +21,12 @@ public sealed class KeystrokeTracker : IDisposable
         _hook.KeyUp += OnKeyUp;
     }
 
+    /// <summary>Setzt den heutigen Zähler auf einen zuvor gespeicherten Wert, bevor <see cref="Start"/> aufgerufen wird.</summary>
+    public void Seed(long keystrokes) => TotalKeystrokes = keystrokes;
+
+    /// <summary>Setzt den heutigen Zähler zurück (Tageswechsel, Gesamtkonzept Abschnitt 25).</summary>
+    public void ResetForNewDay() => TotalKeystrokes = 0;
+
     public void Start() => _hook.Start();
 
     private void OnKeyDown(int vkCode)

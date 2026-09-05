@@ -4,7 +4,37 @@ Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36), mit einer Planänderung ab
 v0.7.0: auf Nutzerwunsch wurden Ablage-Minimieren und Scrollrad-Erfassung
 vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
-dadurch eine Version weiter nach hinten.
+dadurch eine Version weiter nach hinten - auf v0.8.0.
+
+## [0.8.0] – 2026-09-05
+
+Datenspeicherung.
+
+### Neu
+- MouseMeter speichert die heutigen Messwerte jetzt dauerhaft (Gesamtkonzept
+  Abschnitt 24): Mausstrecke, Aktivzeit, alle drei Klickarten,
+  Tastaturanschläge und Scrollrad-Ausschläge überstehen einen Neustart der
+  Anwendung und laufen nahtlos weiter, statt bei Null zu beginnen.
+- Der persönliche Geschwindigkeitsrekord (Kachel „Rekord“) ist jetzt
+  **dauerhaft** - er gilt nicht mehr nur für die laufende Sitzung, sondern
+  bleibt über beliebig viele Programmstarts hinweg erhalten.
+- Automatische Tageserkennung (Abschnitt 25): MouseMeter erkennt einen neuen
+  Kalendertag von selbst, schließt den bisherigen Tag ab und beginnt ohne
+  Zutun eine neue Tagesstatistik - auch während die Anwendung durchgehend
+  läuft.
+- Speicherort: standardmäßig ein Unterordner `data` neben der EXE (portabel,
+  Abschnitt 4). Lässt sich dieser nicht beschreiben (z. B. in einem
+  schreibgeschützten Programmverzeichnis), weicht MouseMeter automatisch auf
+  `%AppData%\MouseMeter` aus.
+- Gespeichert wird alle 5 Sekunden sowie beim Beenden, jeweils über eine
+  temporäre Datei mit anschließendem Ersetzen - ein Absturz mitten im
+  Schreibvorgang kann die Datendatei damit nicht beschädigen.
+
+### Noch nicht enthalten
+Die neu gespeicherten Tagesdaten werden noch nicht für Wochen-, Monats- oder
+Jahresansichten ausgewertet - die Zeitraum-Auswahl nimmt die Auswahl bereits
+entgegen, zeigt aber weiterhin nur den aktuellen Tag. Das folgt mit der
+nächsten Version.
 
 ## [0.7.1] – 2026-09-05
 

@@ -7,17 +7,23 @@ auswertet: zurückgelegte Mausstrecke, Mausgeschwindigkeit, Klicks und
 Tastaturanschläge – automatisch im Hintergrund, ohne dass eine Messung manuell
 gestartet werden muss.
 
-![MouseMeter v0.7.1](docs/screenshot-v0.7.1.png)
+![MouseMeter v0.8.0](docs/screenshot-v0.8.0.png)
 
-## Aktueller Stand: v0.7.1
+## Aktueller Stand: v0.8.0
 
-Alle zehn Dashboard-Kacheln zeigen echte, live erfasste Werte: Mausstrecke,
-Geschwindigkeit, Durchschnitt, Rekord, Links-, Rechts-, Mittel- und
-Gesamtklicks, Tastaturanschläge sowie Scrollrad-Ausschläge inklusive
-geschätzter Scrollstrecke in Metern. Beim Minimieren verschwindet MouseMeter
-aus der Taskleiste und legt sich in die Ablage neben der Uhr. Was in dieser
-Version enthalten ist, steht im [Changelog](CHANGELOG.md). Datenspeicherung
-über Programmstarts hinweg folgt mit der nächsten Version.
+Alle zehn Dashboard-Kacheln zeigen echte, live erfasste Werte, und die
+heutige Statistik wird jetzt dauerhaft gespeichert: Ein Neustart von
+MouseMeter setzt Mausstrecke, Klicks, Tastaturanschläge und Scrollrad nicht
+mehr zurück, sondern läuft nahtlos weiter. Der persönliche
+Geschwindigkeitsrekord gilt jetzt für immer. MouseMeter erkennt außerdem
+automatisch einen neuen Kalendertag und beginnt dann von selbst eine neue
+Tagesstatistik. Beim Minimieren verschwindet MouseMeter aus der Taskleiste
+und legt sich in die Ablage neben der Uhr. Was in dieser Version enthalten
+ist, steht im [Changelog](CHANGELOG.md). Die Auswertung nach Woche, Monat
+und Jahr folgt mit der nächsten Version.
+
+Die Daten liegen als JSON-Datei in `data/` neben der EXE (portabel) - siehe
+`tools/`-Abschnitt weiter unten für Details zum Speicherort.
 
 ## Aufbau
 
@@ -29,8 +35,10 @@ MouseMeter/
 │     ├─ App.xaml(.cs)              Programmstart, Einzelinstanz, Splash → Hauptfenster
 │     ├─ Assets/                    Vektorlogo und Anwendungssymbol
 │     ├─ Styles/Theme.xaml          Farben, Typografie, wiederverwendbare Bausteine
-│     ├─ Views/                     SplashWindow, MainWindow
-│     └─ Infrastructure/            AppInfo (Version), WindowTheme (dunkle Titelleiste)
+│     ├─ Views/                     SplashWindow, MainWindow, Settings-/ContactWindow
+│     └─ Infrastructure/
+│        ├─ Storage/                DailyStats, AppState, DataStore (Persistenz)
+│        └─ *Tracker.cs, *Hook.cs   Maus-/Tastatur-/Scroll-Erfassung, Ablage-Symbol
 ├─ docs/                            Screenshots
 ├─ tools/                           Hilfsskripte
 └─ releases/                        Versionsarchive (nicht im Git)

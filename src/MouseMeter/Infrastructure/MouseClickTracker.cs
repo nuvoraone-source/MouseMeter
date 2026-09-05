@@ -23,6 +23,22 @@ public sealed class MouseClickTracker : IDisposable
         _hook.ButtonDown += OnButtonDown;
     }
 
+    /// <summary>Setzt die heutigen Klickzähler auf zuvor gespeicherte Werte, bevor <see cref="Start"/> aufgerufen wird.</summary>
+    public void Seed(long leftClicks, long rightClicks, long middleClicks)
+    {
+        LeftClicks = leftClicks;
+        RightClicks = rightClicks;
+        MiddleClicks = middleClicks;
+    }
+
+    /// <summary>Setzt die heutigen Klickzähler zurück (Tageswechsel, Gesamtkonzept Abschnitt 25).</summary>
+    public void ResetForNewDay()
+    {
+        LeftClicks = 0;
+        RightClicks = 0;
+        MiddleClicks = 0;
+    }
+
     public void Start() => _hook.Start();
 
     private void OnButtonDown(MouseButtonKind button)

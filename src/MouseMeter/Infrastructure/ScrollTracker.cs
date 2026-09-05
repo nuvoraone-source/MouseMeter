@@ -35,6 +35,20 @@ public sealed class ScrollTracker : IDisposable
         _hook.WheelScrolled += OnWheelScrolled;
     }
 
+    /// <summary>Setzt die heutigen Zähler auf zuvor gespeicherte Werte, bevor <see cref="Start"/> aufgerufen wird.</summary>
+    public void Seed(long forwardScrolls, long backwardScrolls)
+    {
+        ForwardScrolls = forwardScrolls;
+        BackwardScrolls = backwardScrolls;
+    }
+
+    /// <summary>Setzt die heutigen Zähler zurück (Tageswechsel, Gesamtkonzept Abschnitt 25).</summary>
+    public void ResetForNewDay()
+    {
+        ForwardScrolls = 0;
+        BackwardScrolls = 0;
+    }
+
     public void Start() => _hook.Start();
 
     private void OnWheelScrolled(int delta)
