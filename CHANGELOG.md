@@ -3,6 +3,23 @@
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36).
 
+## [0.4.0] – 2026-09-05
+
+Geschwindigkeitsmessung und Rekord.
+
+### Neu
+- Kachel „Geschwindigkeit“ zeigt die aktuelle Mausgeschwindigkeit, berechnet
+  aus der Streckenänderung je Anzeige-Intervall (200 ms).
+- Kachel „Durchschnitt“ zeigt die durchschnittliche Geschwindigkeit über die
+  gesamte laufende Sitzung (Gesamtstrecke ÷ Gesamtzeit).
+- Kachel „Rekord“ merkt sich die höchste in dieser Sitzung gemessene
+  Geschwindigkeit.
+
+### Bekannte Einschränkung
+Der Rekord gilt nur für die laufende Sitzung und geht beim Beenden von
+MouseMeter noch verloren - ein dauerhafter, sitzungsübergreifender Rekord
+folgt zusammen mit der Datenspeicherung (v0.7.0).
+
 ## [0.3.0] – 2026-09-05
 
 Mausbewegung und Mausstrecke.

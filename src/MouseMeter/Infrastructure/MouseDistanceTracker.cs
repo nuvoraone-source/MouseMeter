@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace MouseMeter.Infrastructure;
 
@@ -19,6 +20,7 @@ public sealed class MouseDistanceTracker : IDisposable
     private static extern uint GetDpiForSystem();
 
     private readonly GlobalMouseHook _hook = new();
+    private readonly Stopwatch _runtime = new();
     private readonly double _metersPerPixel;
 
     private bool _hasLastPosition;
@@ -28,13 +30,20 @@ public sealed class MouseDistanceTracker : IDisposable
     /// <summary>Seit Start dieser Sitzung insgesamt zurückgelegte Strecke in Metern.</summary>
     public double TotalDistanceMeters { get; private set; }
 
+    /// <summary>Seit <see cref="Start"/> vergangene Zeit - Grundlage für die Durchschnittsgeschwindigkeit.</summary>
+    public TimeSpan Elapsed => _runtime.Elapsed;
+
     public MouseDistanceTracker()
     {
         _metersPerPixel = MetersPerInch / ReadSystemDpi();
         _hook.MouseMoved += OnMouseMoved;
     }
 
-    public void Start() => _hook.Start();
+    public void Start()
+    {
+        _hook.Start();
+        _runtime.Start();
+    }
 
     private void OnMouseMoved(int x, int y)
     {

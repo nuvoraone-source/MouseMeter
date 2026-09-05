@@ -170,7 +170,7 @@
                                Style="{StaticResource BodyText}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                TextAlignment="Center" MaxWidth="380"
-                               Text="Diagramm für den Tagesverlauf folgt, sobald ab v0.3.0 echte Messwerte erfasst werden." />
+                               Text="Diagramm für den Tagesverlauf folgt, sobald der Verlauf dauerhaft gespeichert wird." />
                 </Grid>
             </Border>
 
