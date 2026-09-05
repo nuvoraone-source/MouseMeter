@@ -1,7 +1,31 @@
 # Changelog
 
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
-Entwicklungsplan aus dem Gesamtkonzept (§36).
+Entwicklungsplan aus dem Gesamtkonzept (§36), mit einer Planänderung ab
+v0.7.0: auf Nutzerwunsch wurden Ablage-Minimieren und Scrollrad-Erfassung
+vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
+dadurch eine Version weiter nach hinten.
+
+## [0.7.0] – 2026-09-05
+
+Minimieren in die Ablage und Scrollrad-Erfassung.
+
+### Neu
+- MouseMeter verschwindet beim Minimieren aus der Taskleiste und legt
+  stattdessen ein Symbol in die Windows-Ablage neben der Uhr (systemnaher
+  Hintergrundbetrieb, Gesamtkonzept Abschnitt 31). Ein Linksklick auf das
+  Symbol stellt das Fenster wieder her, ein Rechtsklick öffnet ein Menü zum
+  Öffnen oder Beenden. Implementiert direkt über die native Shell-API
+  (`Shell_NotifyIcon`), ohne zusätzliche Windows-Forms-Abhängigkeit.
+- Neue Kachel „Scrollrad“ (halbe Breite, neben der ebenfalls auf halbe
+  Breite verkleinerten Kachel „Tastaturanschläge“): zählt Scrollrad-Ausschläge
+  getrennt nach vorwärts (▲) und rückwärts (▼).
+- `GlobalMouseHook` erkennt zusätzlich Scrollrad-Ereignisse; `ScrollTracker`
+  zählt sie getrennt nach Richtung.
+
+### Bekannte Einschränkung
+Auch die Scrollrad-Zähler gelten nur für die laufende Sitzung; dauerhafte
+Speicherung folgt mit der nächsten Version.
 
 ## [0.6.0] – 2026-09-05
 

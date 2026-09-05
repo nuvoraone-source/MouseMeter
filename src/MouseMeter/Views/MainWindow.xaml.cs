@@ -13,9 +13,12 @@ namespace MouseMeter.Views;
 /// den neun Live-Kacheln, Diagrammfläche und Statusleiste.
 ///
 /// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0),
-/// Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0) sowie Tastatur-
-/// anschläge (v0.6.0) werden bereits live erfasst - alle neun Kacheln des
-/// Dashboards zeigen damit echte Werte (siehe Gesamtkonzept Abschnitt 36).
+/// Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0), Tastaturanschläge
+/// (v0.6.0) sowie Scrollrad-Ausschläge (v0.7.0) werden bereits live erfasst -
+/// alle Dashboard-Kacheln zeigen damit echte Werte (Gesamtkonzept Abschnitt
+/// 36, mit vorgezogenem Ablage-Minimieren und Scrollrad-Erfassung in v0.7.0).
+/// Beim Minimieren verschwindet MouseMeter aus der Taskleiste und legt
+/// stattdessen ein Symbol in die Ablage neben der Uhr.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -29,6 +32,8 @@ public partial class MainWindow : Window
     private readonly MouseDistanceTracker _distanceTracker = new();
     private readonly MouseClickTracker _clickTracker = new();
     private readonly KeystrokeTracker _keystrokeTracker = new();
+    private readonly ScrollTracker _scrollTracker = new();
+    private readonly TrayIconController _trayIcon;
     private readonly DispatcherTimer _displayTimer;
     private readonly Stopwatch _sampleStopwatch = new();
 
@@ -52,9 +57,19 @@ public partial class MainWindow : Window
         _displayTimer = new DispatcherTimer { Interval = DisplayRefreshInterval };
         _displayTimer.Tick += (_, _) => RenderDashboard();
 
+        // Dasselbe Symbol wie das Anwendungsfenster - direkt aus der laufenden
+        // EXE gelesen, kein separates Laden der Ressourcendatei nötig. Der
+        // Controller übernimmt den Besitz und gibt das Icon-Handle erst beim
+        // eigenen Dispose frei (ein "using" hier hätte es sofort zerstört).
+        var appIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!)!;
+        _trayIcon = new TrayIconController(this, appIcon);
+        _trayIcon.RestoreRequested += OnTrayRestoreRequested;
+        _trayIcon.ExitRequested += OnTrayExitRequested;
+
         RenderDashboard();
 
         Loaded += OnLoaded;
+        StateChanged += OnStateChanged;
         Closed += OnClosed;
     }
 
@@ -63,6 +78,7 @@ public partial class MainWindow : Window
         _distanceTracker.Start();
         _clickTracker.Start();
         _keystrokeTracker.Start();
+        _scrollTracker.Start();
         _sampleStopwatch.Start();
         _displayTimer.Start();
 
@@ -70,12 +86,38 @@ public partial class MainWindow : Window
         StatusDot.Fill = (Brush)FindResource("StatusOkBrush");
     }
 
+    // Beim Minimieren verschwindet MouseMeter komplett aus der Taskleiste und
+    // legt stattdessen nur ein Symbol in die Ablage neben der Uhr - die
+    // Erfassung im Hintergrund läuft dabei unverändert weiter.
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            Hide();
+            ShowInTaskbar = false;
+            _trayIcon.Show();
+        }
+    }
+
+    private void OnTrayRestoreRequested()
+    {
+        _trayIcon.Hide();
+        ShowInTaskbar = true;
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
+    }
+
+    private void OnTrayExitRequested() => Close();
+
     private void OnClosed(object? sender, EventArgs e)
     {
         _displayTimer.Stop();
         _distanceTracker.Dispose();
         _clickTracker.Dispose();
         _keystrokeTracker.Dispose();
+        _scrollTracker.Dispose();
+        _trayIcon.Dispose();
     }
 
     /// <summary>
@@ -114,6 +156,9 @@ public partial class MainWindow : Window
         TotalClicksValueText.Text = Formatting.Count(_clickTracker.TotalClicks);
 
         KeystrokesValueText.Text = Formatting.Count(_keystrokeTracker.TotalKeystrokes);
+
+        ScrollForwardValueText.Text = Formatting.Count(_scrollTracker.ForwardScrolls);
+        ScrollBackwardValueText.Text = Formatting.Count(_scrollTracker.BackwardScrolls);
     }
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)

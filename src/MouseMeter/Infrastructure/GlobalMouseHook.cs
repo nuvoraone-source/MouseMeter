@@ -27,6 +27,7 @@ public sealed class GlobalMouseHook : IDisposable
     private const int WmLButtonDown = 0x0201;
     private const int WmRButtonDown = 0x0204;
     private const int WmMButtonDown = 0x0207;
+    private const int WmMouseWheel = 0x020A;
 
     private delegate nint LowLevelMouseProc(int nCode, nint wParam, nint lParam);
 
@@ -70,6 +71,9 @@ public sealed class GlobalMouseHook : IDisposable
 
     /// <summary>Ausgelöst, sobald eine Maustaste gedrückt wird.</summary>
     public event Action<MouseButtonKind>? ButtonDown;
+
+    /// <summary>Ausgelöst bei jedem Scrollrad-Ausschlag (positiv = vorwärts/hoch, negativ = rückwärts/runter).</summary>
+    public event Action<int>? WheelScrolled;
 
     public GlobalMouseHook()
     {
@@ -119,6 +123,12 @@ public sealed class GlobalMouseHook : IDisposable
                     break;
                 case WmMButtonDown:
                     ButtonDown?.Invoke(MouseButtonKind.Middle);
+                    break;
+                case WmMouseWheel:
+                    var wheelData = Marshal.PtrToStructure<MsLlHookStruct>(lParam);
+                    // Das Vorzeichen steckt im oberen Wort von MouseData (signed 16-Bit-Delta).
+                    short wheelDelta = (short)(wheelData.MouseData >> 16);
+                    WheelScrolled?.Invoke(wheelDelta);
                     break;
             }
         }
