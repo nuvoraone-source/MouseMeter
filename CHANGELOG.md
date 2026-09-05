@@ -3,6 +3,26 @@
 Alle nennenswerten Änderungen an MouseMeter. Die Versionsnummern folgen dem
 Entwicklungsplan aus dem Gesamtkonzept (§36).
 
+## [0.6.0] – 2026-09-05
+
+Tastaturanschläge.
+
+### Neu
+- Systemweiter Low-Level-Tastaturhook (`GlobalKeyboardHook`): erkennt
+  Tastendruck und Loslassen anhand des virtuellen Tastencodes - niemals das
+  resultierende Zeichen oder den eingegebenen Text.
+- `KeystrokeTracker` zählt echte Anschläge und rechnet dabei die
+  Windows-eigene Wiederholung beim Gedrückthalten einer Taste heraus: ein
+  Tastencode zählt erst nach dem Loslassen erneut als neuer Anschlag.
+- Die Kachel „Tastaturanschläge“ zeigt jetzt den echten, live gezählten Wert.
+
+Damit zeigen alle neun Dashboard-Kacheln echte, live erfasste Werte -
+das Grundgerüst aus v0.1.0/v0.2.0 ist vollständig mit Leben gefüllt.
+
+### Bekannte Einschränkung
+Auch dieser Zähler gilt nur für die laufende Sitzung; dauerhafte Speicherung
+folgt mit v0.7.0.
+
 ## [0.5.0] – 2026-09-05
 
 Mausklick-Erfassung.

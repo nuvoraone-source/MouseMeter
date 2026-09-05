@@ -12,10 +12,10 @@ namespace MouseMeter.Views;
 /// Hauptfenster von MouseMeter: Kopfbereich, Zeitraum-Auswahl, Dashboard mit
 /// den neun Live-Kacheln, Diagrammfläche und Statusleiste.
 ///
-/// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0)
-/// sowie Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0) werden bereits
-/// live erfasst. Tastaturanschläge folgen in der nächsten Version (siehe
-/// Gesamtkonzept Abschnitt 36) und zeigen bis dahin weiterhin Null.
+/// Mausstrecke (v0.3.0), Geschwindigkeit, Durchschnitt und Rekord (v0.4.0),
+/// Links-, Rechts-, Mittel- und Gesamtklicks (v0.5.0) sowie Tastatur-
+/// anschläge (v0.6.0) werden bereits live erfasst - alle neun Kacheln des
+/// Dashboards zeigen damit echte Werte (siehe Gesamtkonzept Abschnitt 36).
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -28,6 +28,7 @@ public partial class MainWindow : Window
 
     private readonly MouseDistanceTracker _distanceTracker = new();
     private readonly MouseClickTracker _clickTracker = new();
+    private readonly KeystrokeTracker _keystrokeTracker = new();
     private readonly DispatcherTimer _displayTimer;
     private readonly Stopwatch _sampleStopwatch = new();
 
@@ -61,6 +62,7 @@ public partial class MainWindow : Window
     {
         _distanceTracker.Start();
         _clickTracker.Start();
+        _keystrokeTracker.Start();
         _sampleStopwatch.Start();
         _displayTimer.Start();
 
@@ -73,14 +75,14 @@ public partial class MainWindow : Window
         _displayTimer.Stop();
         _distanceTracker.Dispose();
         _clickTracker.Dispose();
+        _keystrokeTracker.Dispose();
     }
 
     /// <summary>
-    /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln.
-    /// Mausstrecke, Geschwindigkeit, Durchschnitt, Rekord und alle Klicks
-    /// stammen aus der echten Erfassung. Tastaturanschläge zeigen noch
-    /// Nullwerte, bis ihre Erfassung in einer späteren Version dazukommt -
-    /// aber bereits im endgültigen Zahlenformat (Abschnitt 33).
+    /// Schreibt die aktuellen Messwerte in die Dashboard-Kacheln. Alle neun
+    /// Kacheln stammen jetzt aus der echten Erfassung, im endgültigen
+    /// Zahlenformat (Abschnitt 33: Messwerte mit zwei Nachkommastellen,
+    /// Zähler ohne).
     /// </summary>
     private void RenderDashboard()
     {
@@ -111,7 +113,7 @@ public partial class MainWindow : Window
         MiddleClicksValueText.Text = Formatting.Count(_clickTracker.MiddleClicks);
         TotalClicksValueText.Text = Formatting.Count(_clickTracker.TotalClicks);
 
-        KeystrokesValueText.Text = Formatting.Count(0);
+        KeystrokesValueText.Text = Formatting.Count(_keystrokeTracker.TotalKeystrokes);
     }
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)
