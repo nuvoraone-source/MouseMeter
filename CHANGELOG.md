@@ -7,6 +7,20 @@ vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
 dadurch eine Version weiter nach hinten - auf v0.8.0, die Zeitraum-Auswertung
 auf v0.9.0 und die Diagramme auf v0.10.0.
 
+## [1.0.1] – 2026-09-05
+
+Diagramm-Werte auch bei Monat sichtbar.
+
+### Behoben
+Bei „Monat“ (bis zu 31 Balken) fehlten die Gesamtwerte über den Balken -
+anders als bei „Woche“ und „Jahr“, wo sie schon direkt sichtbar waren. Ein
+erster Versuch mit gedrehter Beschriftung an jedem Balken erwies sich als
+unleserlich und wurde verworfen. Stattdessen zeigt MouseMeter den Wert jetzt
+an genau den Tagen, die ohnehin schon eine Tageszahl unter dem Balken tragen
+(1., 5., 10., 15., 20., 25., letzter Tag), in kompakter Kurzform (z. B.
+„150m“ statt „150,00 m“). Für die übrigen Tage bleibt der genaue Wert per
+Tooltip abrufbar.
+
 ## [1.0.0] – 2026-09-05
 
 Stabile erste vollständige Version.

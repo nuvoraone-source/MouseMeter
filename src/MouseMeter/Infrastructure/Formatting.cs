@@ -33,4 +33,16 @@ public static class Formatting
         ChartMetric.Speed => $"{Speed(value)} m/s",
         _ => Count((long)Math.Round(value)),
     };
+
+    /// <summary>
+    /// Kurzform für sehr schmale Diagrammbalken (z. B. Monatsansicht mit bis
+    /// zu 31 Balken): gerundet, ohne Tausenderpunkt, mit möglichst kurzer
+    /// Einheit - der genaue Wert steht weiterhin im Tooltip.
+    /// </summary>
+    public static string CompactMetricValue(ChartMetric metric, double value) => metric switch
+    {
+        ChartMetric.Distance => $"{Math.Round(value):0}m",
+        ChartMetric.Speed => value.ToString("0.00", Culture),
+        _ => Math.Round(value).ToString("0", Culture),
+    };
 }

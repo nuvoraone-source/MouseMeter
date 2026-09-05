@@ -345,21 +345,33 @@ public partial class MainWindow : Window
 
             var cell = new StackPanel();
 
-            // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert noch
-            // gut lesbar über den Tooltip hinaus direkt ins Diagramm; beim
-            // Monat (bis zu 31 Balken) würde das nur überlappen - dort bleibt
-            // es beim Tooltip.
-            if (series.Count <= 12)
+            // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert zu
+            // jedem Balken. Beim Monat (bis zu 31 schmale Balken) würde das
+            // bei jedem Balken überlappen - dort wird der Wert deshalb nur
+            // an denselben Tagen gezeigt, die ohnehin schon eine Tageszahl
+            // darunter tragen (siehe ChartSeriesBuilder), dafür in kompakter
+            // Kurzform. Die übrigen Balken bleiben über den Tooltip abrufbar.
+            bool isNarrow = series.Count > 12;
+            bool showValue = !isNarrow || !string.IsNullOrEmpty(point.Label);
+
+            if (showValue)
             {
                 cell.Children.Add(new TextBlock
                 {
-                    Text = Formatting.MetricValue(_selectedMetric, point.Value),
+                    Text = isNarrow
+                        ? Formatting.CompactMetricValue(_selectedMetric, point.Value)
+                        : Formatting.MetricValue(_selectedMetric, point.Value),
                     FontFamily = (FontFamily)FindResource("UiFont"),
-                    FontSize = 9,
+                    FontSize = isNarrow ? 8 : 9,
                     Foreground = (Brush)FindResource("TextPrimaryBrush"),
                     HorizontalAlignment = HorizontalAlignment.Center,
                     Margin = new Thickness(0, 0, 0, 3),
                 });
+            }
+            else
+            {
+                // Platzhalter, damit alle Balken trotzdem gleich hoch anfangen.
+                cell.Children.Add(new TextBlock { FontSize = isNarrow ? 8 : 9, Text = " " });
             }
 
             cell.Children.Add(barHost);
