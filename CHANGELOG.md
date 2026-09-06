@@ -7,6 +7,29 @@ vorgezogen. Die ursprünglich für v0.7.0 vorgesehene Datenspeicherung rückt
 dadurch eine Version weiter nach hinten - auf v0.8.0, die Zeitraum-Auswertung
 auf v0.9.0 und die Diagramme auf v0.10.0.
 
+## [1.0.2] – 2026-09-06
+
+Automatischer Windows-Start beginnt direkt in der Ablage.
+
+### Behoben
+Bisher zeigte MouseMeter beim automatischen Start mit Windows das komplette
+Hauptfenster - der Nutzer musste es von Hand minimieren, damit es in der
+Ablage verschwindet. Jetzt startet MouseMeter beim Windows-Start direkt dort:
+Nur der Startbildschirm ist kurz zu sehen, danach legt sich MouseMeter sofort
+neben die Uhr, ohne dass das Hauptfenster jemals sichtbar aufblitzt oder in
+der Taskleiste erscheint. Ein manueller Start (Doppelklick) zeigt das Fenster
+weiterhin ganz normal.
+
+Technisch: Der Autostart-Registry-Eintrag ruft MouseMeter jetzt mit dem
+Argument `--autostart` auf (`AutostartManager.StartMinimizedArg`); `App`
+erkennt das und übergibt es an `MainWindow`, das dann vor dem ersten Anzeigen
+bereits minimiert und aus der Taskleiste entfernt startet.
+
+### Live getestet
+Mit `--autostart` gestartet: Prozess lief weiter, aber alle seine Fenster
+waren als "hidden" bestätigt, kein Taskleisten-Eintrag. Ohne das Argument
+gestartet (normaler Doppelklick): Fenster erschien wie gewohnt sichtbar.
+
 ## [1.0.1] – 2026-09-05
 
 Diagramm-Werte auch bei Monat sichtbar.

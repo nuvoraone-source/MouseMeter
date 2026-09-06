@@ -26,7 +26,10 @@ namespace MouseMeter.Views;
 /// in den Einstellungen abschaltet) und erklärt dort auch, welche Daten
 /// erfasst werden (Gesamtkonzept Abschnitt 5, 28, 30). Beim Minimieren
 /// verschwindet MouseMeter aus der Taskleiste und legt stattdessen ein
-/// Symbol in die Ablage neben der Uhr.
+/// Symbol in die Ablage neben der Uhr - seit v1.0.2 gilt das beim
+/// automatischen Windows-Start von Anfang an, ohne dass das Fenster jemals
+/// sichtbar aufblitzt (siehe <see cref="App"/> und
+/// <see cref="Infrastructure.AutostartManager.StartMinimizedArg"/>).
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -66,9 +69,28 @@ public partial class MainWindow : Window
     private DashboardPeriod _selectedPeriod = DashboardPeriod.Day;
     private ChartMetric _selectedMetric = ChartMetric.Distance;
 
-    public MainWindow()
+    // Bei automatischem Windows-Start (siehe AutostartManager.StartMinimizedArg)
+    // soll nur der Startbildschirm zu sehen sein - das Hauptfenster selbst
+    // legt sich direkt in die Ablage, statt sichtbar zu erscheinen.
+    private readonly bool _startMinimized;
+
+    public MainWindow() : this(startMinimized: false)
     {
+    }
+
+    public MainWindow(bool startMinimized)
+    {
+        _startMinimized = startMinimized;
+
         InitializeComponent();
+
+        if (_startMinimized)
+        {
+            // Vor dem Show()-Aufruf gesetzt, damit das Fenster nie sichtbar
+            // aufblitzt - weder auf dem Desktop noch in der Taskleiste.
+            WindowState = WindowState.Minimized;
+            ShowInTaskbar = false;
+        }
 
         WindowTheme.ApplyDarkTitleBar(this);
 
@@ -143,6 +165,19 @@ public partial class MainWindow : Window
 
         StatusText.Text = "Aktiv";
         StatusDot.Fill = (Brush)FindResource("StatusOkBrush");
+
+        if (_startMinimized)
+        {
+            MinimizeToTray();
+        }
+    }
+
+    /// <summary>Blendet das Fenster aus, entfernt es aus der Taskleiste und zeigt stattdessen das Ablage-Symbol.</summary>
+    private void MinimizeToTray()
+    {
+        Hide();
+        ShowInTaskbar = false;
+        _trayIcon.Show();
     }
 
     /// <summary>
@@ -198,9 +233,7 @@ public partial class MainWindow : Window
     {
         if (WindowState == WindowState.Minimized)
         {
-            Hide();
-            ShowInTaskbar = false;
-            _trayIcon.Show();
+            MinimizeToTray();
         }
     }
 

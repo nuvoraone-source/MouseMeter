@@ -12,6 +12,14 @@ public static class AutostartManager
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string ValueName = "MouseMeter";
 
+    /// <summary>
+    /// Kommandozeilenargument, mit dem MouseMeter beim automatischen
+    /// Windows-Start aufgerufen wird. Sagt der Anwendung, direkt in die
+    /// Ablage zu starten, statt das Hauptfenster sichtbar zu zeigen - nur
+    /// der Startbildschirm bleibt wie gewohnt kurz zu sehen.
+    /// </summary>
+    public const string StartMinimizedArg = "--autostart";
+
     public static bool IsEnabled()
     {
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: false);
@@ -24,7 +32,7 @@ public static class AutostartManager
         if (enabled)
         {
             string exePath = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
-            key.SetValue(ValueName, $"\"{exePath}\"");
+            key.SetValue(ValueName, $"\"{exePath}\" {StartMinimizedArg}");
         }
         else
         {

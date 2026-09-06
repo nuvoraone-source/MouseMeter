@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
+using MouseMeter.Infrastructure;
 using MouseMeter.Views;
 
 namespace MouseMeter;
@@ -14,6 +16,7 @@ public partial class App : Application
     private const string InstanceMutexName = @"Local\MouseMeter.SingleInstance";
 
     private Mutex? _instanceMutex;
+    private bool _startMinimized;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -28,6 +31,12 @@ public partial class App : Application
             return;
         }
 
+        // Wurde MouseMeter automatisch mit Windows gestartet, soll nur der
+        // Startbildschirm kurz zu sehen sein - das Hauptfenster selbst
+        // erscheint dann nicht, sondern MouseMeter liegt direkt in der
+        // Ablage neben der Uhr (siehe AutostartManager.StartMinimizedArg).
+        _startMinimized = e.Args.Contains(AutostartManager.StartMinimizedArg);
+
         var splash = new SplashWindow();
         splash.Finished += (_, _) => ShowMainWindow(splash);
         splash.Show();
@@ -35,11 +44,15 @@ public partial class App : Application
 
     private void ShowMainWindow(Window splash)
     {
-        var main = new MainWindow();
+        var main = new MainWindow(_startMinimized);
         MainWindow = main;
         main.Closed += (_, _) => Shutdown();
         main.Show();
-        main.Activate();
+
+        if (!_startMinimized)
+        {
+            main.Activate();
+        }
 
         // Erst schließen, wenn das Hauptfenster steht - sonst blitzt kurz der Desktop durch.
         splash.Close();
