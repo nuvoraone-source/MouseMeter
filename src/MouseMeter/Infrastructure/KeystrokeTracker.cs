@@ -9,11 +9,20 @@
 /// </summary>
 public sealed class KeystrokeTracker : IDisposable
 {
+    // Virtueller Tastencode der ESC-Taste (Windows Virtual-Key-Code 0x1B) -
+    // die einzige Taste, deren Identität eigens gezählt wird (siehe
+    // EscKeyPresses unten); alle anderen Tasten fließen ausschließlich in
+    // die anonyme Gesamtzahl ein.
+    private const int EscVirtualKeyCode = 0x1B;
+
     private readonly GlobalKeyboardHook _hook = new();
     private readonly HashSet<int> _pressedKeys = new();
 
     /// <summary>Seit Start dieser Sitzung insgesamt erfasste Tastaturanschläge.</summary>
     public long TotalKeystrokes { get; private set; }
+
+    /// <summary>Davon speziell die ESC-Taste - eigens gezählt, zusätzlich zur Gesamtzahl oben.</summary>
+    public long EscKeyPresses { get; private set; }
 
     public KeystrokeTracker()
     {
@@ -21,11 +30,19 @@ public sealed class KeystrokeTracker : IDisposable
         _hook.KeyUp += OnKeyUp;
     }
 
-    /// <summary>Setzt den heutigen Zähler auf einen zuvor gespeicherten Wert, bevor <see cref="Start"/> aufgerufen wird.</summary>
-    public void Seed(long keystrokes) => TotalKeystrokes = keystrokes;
+    /// <summary>Setzt die heutigen Zähler auf zuvor gespeicherte Werte, bevor <see cref="Start"/> aufgerufen wird.</summary>
+    public void Seed(long keystrokes, long escKeyPresses)
+    {
+        TotalKeystrokes = keystrokes;
+        EscKeyPresses = escKeyPresses;
+    }
 
-    /// <summary>Setzt den heutigen Zähler zurück (Tageswechsel, Gesamtkonzept Abschnitt 25).</summary>
-    public void ResetForNewDay() => TotalKeystrokes = 0;
+    /// <summary>Setzt die heutigen Zähler zurück (Tageswechsel, Gesamtkonzept Abschnitt 25).</summary>
+    public void ResetForNewDay()
+    {
+        TotalKeystrokes = 0;
+        EscKeyPresses = 0;
+    }
 
     public void Start() => _hook.Start();
 
@@ -34,9 +51,15 @@ public sealed class KeystrokeTracker : IDisposable
         // _pressedKeys enthält den Tastencode nur so lange, wie die Taste
         // physisch unten bleibt - dient ausschließlich der Wiederholungs-
         // Erkennung und wird nicht dauerhaft gespeichert oder ausgewertet.
-        if (_pressedKeys.Add(vkCode))
+        if (!_pressedKeys.Add(vkCode))
         {
-            TotalKeystrokes++;
+            return;
+        }
+
+        TotalKeystrokes++;
+        if (vkCode == EscVirtualKeyCode)
+        {
+            EscKeyPresses++;
         }
     }
 

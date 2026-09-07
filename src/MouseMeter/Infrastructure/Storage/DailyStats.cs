@@ -21,6 +21,10 @@ public sealed class DailyStats
     public long RightClicks { get; set; }
     public long MiddleClicks { get; set; }
     public long Keystrokes { get; set; }
+
+    /// <summary>Davon speziell die ESC-Taste - zusätzlich zur Gesamtzahl in <see cref="Keystrokes"/>, die unverändert weiterläuft.</summary>
+    public long EscKeyPresses { get; set; }
+
     public long ScrollForward { get; set; }
     public long ScrollBackward { get; set; }
 

@@ -15,7 +15,7 @@ public static class CsvExporter
     {
         var csv = new StringBuilder();
         csv.AppendLine(
-            "Datum;Distanz (m);Aktivzeit (s);Klicks links;Klicks rechts;Klicks mitte;Tastenanschläge;Scroll vorwärts;Scroll rückwärts");
+            "Datum;Distanz (m);Aktivzeit (s);Klicks links;Klicks rechts;Klicks mitte;Tastenanschläge;davon ESC;Scroll vorwärts;Scroll rückwärts");
 
         foreach ((string day, DailyStats stats) in state.Days.OrderBy(entry => entry.Key, StringComparer.Ordinal))
         {
@@ -27,6 +27,7 @@ public static class CsvExporter
                 stats.RightClicks,
                 stats.MiddleClicks,
                 stats.Keystrokes,
+                stats.EscKeyPresses,
                 stats.ScrollForward,
                 stats.ScrollBackward));
         }

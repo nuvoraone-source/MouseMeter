@@ -175,7 +175,7 @@ public partial class MainWindow : Window
         {
             _distanceTracker.Seed(today.DistanceMeters, TimeSpan.FromSeconds(today.ActiveSeconds));
             _clickTracker.Seed(today.LeftClicks, today.RightClicks, today.MiddleClicks);
-            _keystrokeTracker.Seed(today.Keystrokes);
+            _keystrokeTracker.Seed(today.Keystrokes, today.EscKeyPresses);
             _scrollTracker.Seed(today.ScrollForward, today.ScrollBackward);
 
             // Bezugspunkt für die laufende Stunde wiederherstellen: die
@@ -283,6 +283,7 @@ public partial class MainWindow : Window
             RightClicks = _clickTracker.RightClicks,
             MiddleClicks = _clickTracker.MiddleClicks,
             Keystrokes = _keystrokeTracker.TotalKeystrokes,
+            EscKeyPresses = _keystrokeTracker.EscKeyPresses,
             ScrollForward = _scrollTracker.ForwardScrolls,
             ScrollBackward = _scrollTracker.BackwardScrolls,
         };
@@ -413,6 +414,7 @@ public partial class MainWindow : Window
         TotalClicksValueText.Text = Formatting.Count(display.LeftClicks + display.RightClicks + display.MiddleClicks);
 
         KeystrokesValueText.Text = Formatting.Count(display.Keystrokes);
+        EscKeyValueText.Text = Formatting.Count(display.EscKeyPresses);
 
         ScrollDistanceValueText.Text = Formatting.Distance(ScrollTracker.ComputeDistance(display.ScrollForward + display.ScrollBackward));
         ScrollForwardValueText.Text = Formatting.Count(display.ScrollForward);
@@ -477,33 +479,24 @@ public partial class MainWindow : Window
             var cell = new StackPanel();
 
             // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert zu
-            // jedem Balken. Beim Monat (bis zu 31 schmale Balken) würde das
-            // bei jedem Balken überlappen - dort wird der Wert deshalb nur
-            // an denselben Tagen gezeigt, die ohnehin schon eine Tageszahl
-            // darunter tragen (siehe ChartSeriesBuilder), dafür in kompakter
-            // Kurzform. Die übrigen Balken bleiben über den Tooltip abrufbar.
+            // jedem Balken. Bei Tag/Monat (24 bzw. bis zu 31 schmale Balken)
+            // würde das ausgeschrieben überlappen - dort wird deshalb überall
+            // die kompakte Kurzform verwendet, aber an jedem Balken (Abschnitt
+            // "in der Stunden- und Monatsansicht muss an jedem Balken ein Wert
+            // angezeigt werden").
             bool isNarrow = series.Count > 12;
-            bool showValue = !isNarrow || !string.IsNullOrEmpty(point.Label);
 
-            if (showValue)
+            cell.Children.Add(new TextBlock
             {
-                cell.Children.Add(new TextBlock
-                {
-                    Text = isNarrow
-                        ? Formatting.CompactMetricValue(_selectedMetric, point.Value)
-                        : Formatting.MetricValue(_selectedMetric, point.Value),
-                    FontFamily = (FontFamily)FindResource("UiFont"),
-                    FontSize = isNarrow ? 8 : 9,
-                    Foreground = (Brush)FindResource("TextPrimaryBrush"),
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    Margin = new Thickness(0, 0, 0, 3),
-                });
-            }
-            else
-            {
-                // Platzhalter, damit alle Balken trotzdem gleich hoch anfangen.
-                cell.Children.Add(new TextBlock { FontSize = isNarrow ? 8 : 9, Text = " " });
-            }
+                Text = isNarrow
+                    ? Formatting.CompactMetricValue(_selectedMetric, point.Value)
+                    : Formatting.MetricValue(_selectedMetric, point.Value),
+                FontFamily = (FontFamily)FindResource("UiFont"),
+                FontSize = isNarrow ? 8 : 9,
+                Foreground = (Brush)FindResource("TextPrimaryBrush"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 3),
+            });
 
             cell.Children.Add(barHost);
             cell.Children.Add(label);

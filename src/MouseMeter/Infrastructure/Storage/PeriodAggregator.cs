@@ -49,6 +49,7 @@ public static class PeriodAggregator
             total.RightClicks += entry.RightClicks;
             total.MiddleClicks += entry.MiddleClicks;
             total.Keystrokes += entry.Keystrokes;
+            total.EscKeyPresses += entry.EscKeyPresses;
             total.ScrollForward += entry.ScrollForward;
             total.ScrollBackward += entry.ScrollBackward;
         }
