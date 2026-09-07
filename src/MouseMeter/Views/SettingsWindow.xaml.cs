@@ -1,12 +1,17 @@
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
+using Microsoft.Win32;
 using MouseMeter.Infrastructure;
+using MouseMeter.Infrastructure.Storage;
 
 namespace MouseMeter.Views;
 
 /// <summary>
-/// Einstellungsfenster: Autostart-Schalter, Datenschutzerklärung und
-/// Kontaktweg. Tracking und Datenverwaltung folgen in einer der nächsten
-/// Versionen (Gesamtkonzept Abschnitt 28).
+/// Einstellungsfenster: Autostart-Schalter, Speicherort der Daten,
+/// Datenschutzerklärung und Kontaktweg. Weitergehende Tracking- und
+/// Datenverwaltungsoptionen (Export, Aufbewahrungsdauer) folgen in einer der
+/// nächsten Versionen (Gesamtkonzept Abschnitt 28).
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -15,12 +20,21 @@ public partial class SettingsWindow : Window
     // unnötig angefasst wird.
     private bool _isInitializing = true;
 
-    public SettingsWindow()
+    private readonly string _dataFilePath;
+    private readonly AppState _appState;
+
+    public SettingsWindow(string dataFilePath, AppState appState)
     {
+        _dataFilePath = dataFilePath;
+        _appState = appState;
+
         InitializeComponent();
 
         AutostartCheckBox.IsChecked = AutostartManager.IsEnabled();
         _isInitializing = false;
+
+        DataFilePathText.Text = _dataFilePath;
+        DataFilePathText.ToolTip = _dataFilePath;
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
@@ -42,6 +56,55 @@ public partial class SettingsWindow : Window
                 this,
                 "Der Autostart konnte nicht geändert werden (kein Zugriff auf die Registry).",
                 "Autostart",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void OnOpenDataFolderClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // "/select," markiert die Datei im geöffneten Explorer-Fenster
+            // direkt, statt nur den Ordner zu öffnen - so findet man sie auf
+            // Anhieb, auch wenn dort noch weitere Dateien liegen.
+            Process.Start("explorer.exe", $"/select,\"{_dataFilePath}\"");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            MessageBox.Show(
+                this,
+                $"Der Ordner konnte nicht geöffnet werden.\n\nPfad: {_dataFilePath}",
+                "Daten",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void OnExportCsvClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Daten als CSV exportieren",
+            Filter = "CSV-Datei (*.csv)|*.csv",
+            FileName = $"mousemeter-export-{DateTime.Now:yyyy-MM-dd}.csv",
+        };
+
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            CsvExporter.Export(_appState, dialog.FileName);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(
+                this,
+                $"Der Export ist fehlgeschlagen.\n\nPfad: {dialog.FileName}",
+                "Export",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }

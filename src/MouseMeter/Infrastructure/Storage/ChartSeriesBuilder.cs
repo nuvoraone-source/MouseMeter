@@ -3,11 +3,10 @@
 namespace MouseMeter.Infrastructure.Storage;
 
 /// <summary>
-/// Baut die Datenreihe für das Diagramm: einen Balken pro Tag (Woche/Monat)
-/// oder pro Monat (Jahr), für die im Dashboard wählbare Kennzahl
-/// (Gesamtkonzept Abschnitt 19-22). Für "Tag" gibt es keine Reihe - dafür
-/// fehlt die nötige stundengenaue Auflösung, es werden nur Tageswerte
-/// gespeichert.
+/// Baut die Datenreihe für das Diagramm: einen Balken pro Stunde (Tag), Tag
+/// (Woche/Monat) oder pro Monat (Jahr), für die im Dashboard wählbare
+/// Kennzahl (Gesamtkonzept Abschnitt 19-22). "Tag" wertet dabei seit v1.1.0
+/// die stundengenau erfassten Werte aus <see cref="DailyStats.Hours"/> aus.
 /// </summary>
 public static class ChartSeriesBuilder
 {
@@ -22,6 +21,7 @@ public static class ChartSeriesBuilder
     {
         return period switch
         {
+            DashboardPeriod.Day => BuildDay(liveToday, metric),
             DashboardPeriod.Week => BuildWeek(state, today, liveToday, metric),
             DashboardPeriod.Month => BuildMonth(state, today, liveToday, metric),
             DashboardPeriod.Year => BuildYear(state, today, liveToday, metric),
@@ -40,6 +40,30 @@ public static class ChartSeriesBuilder
         ChartMetric.Speed => stats.ActiveSeconds > 0 ? stats.DistanceMeters / stats.ActiveSeconds : 0,
         _ => 0,
     };
+
+    private static double MetricValue(HourlyStats stats, ChartMetric metric) => metric switch
+    {
+        ChartMetric.Distance => stats.DistanceMeters,
+        ChartMetric.Clicks => stats.LeftClicks + stats.RightClicks + stats.MiddleClicks,
+        ChartMetric.Keystrokes => stats.Keystrokes,
+        ChartMetric.Speed => stats.ActiveSeconds > 0 ? stats.DistanceMeters / stats.ActiveSeconds : 0,
+        _ => 0,
+    };
+
+    private static List<ChartDataPoint> BuildDay(DailyStats liveToday, ChartMetric metric)
+    {
+        var points = new List<ChartDataPoint>(24);
+        int currentHour = DateTime.Now.Hour;
+
+        for (int hour = 0; hour < 24; hour++)
+        {
+            double value = hour <= currentHour ? MetricValue(liveToday.Hours[hour], metric) : 0;
+            string label = hour % 3 == 0 ? $"{hour}" : string.Empty;
+            points.Add(new ChartDataPoint(label, value, $"{hour:00}-{hour + 1:00} Uhr - {Formatting.MetricValue(metric, value)}"));
+        }
+
+        return points;
+    }
 
     private static List<ChartDataPoint> BuildWeek(AppState state, DateOnly today, DailyStats liveToday, ChartMetric metric)
     {

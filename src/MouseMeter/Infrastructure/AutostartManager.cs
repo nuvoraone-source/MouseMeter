@@ -31,12 +31,40 @@ public static class AutostartManager
         using RegistryKey key = Registry.CurrentUser.CreateSubKey(RunKeyPath, writable: true);
         if (enabled)
         {
-            string exePath = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
-            key.SetValue(ValueName, $"\"{exePath}\" {StartMinimizedArg}");
+            key.SetValue(ValueName, ExpectedCommandLine());
         }
         else
         {
             key.DeleteValue(ValueName, throwOnMissingValue: false);
         }
+    }
+
+    /// <summary>
+    /// Schreibt den Registry-Eintrag neu, falls Autostart aktiv ist, der
+    /// hinterlegte Befehl aber nicht mehr dem aktuellen Pfad oder Argument
+    /// entspricht (z. B. nach einem Update aus einer Version ohne
+    /// <see cref="StartMinimizedArg"/>, oder nach Verschieben der EXE). So
+    /// bleibt der einmalig gesetzte Autostart-Eintrag dauerhaft korrekt,
+    /// ohne dass der Nutzer ihn in den Einstellungen neu setzen muss.
+    /// </summary>
+    public static void RepairIfEnabled()
+    {
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+        if (key?.GetValue(ValueName) is not string current)
+        {
+            return;
+        }
+
+        string expected = ExpectedCommandLine();
+        if (current != expected)
+        {
+            key.SetValue(ValueName, expected);
+        }
+    }
+
+    private static string ExpectedCommandLine()
+    {
+        string exePath = Environment.ProcessPath ?? Environment.GetCommandLineArgs()[0];
+        return $"\"{exePath}\" {StartMinimizedArg}";
     }
 }

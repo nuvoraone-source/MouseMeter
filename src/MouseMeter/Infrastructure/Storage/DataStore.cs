@@ -16,6 +16,7 @@ namespace MouseMeter.Infrastructure.Storage;
 public sealed class DataStore
 {
     private const string FileName = "mousemeter-data.json";
+    private const string BackupFileName = "mousemeter-data.backup.json";
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -25,9 +26,13 @@ public sealed class DataStore
     /// <summary>Pfad, unter dem die Daten tatsächlich abgelegt werden (nach Ermittlung des Speicherorts).</summary>
     public string FilePath { get; }
 
+    /// <summary>Pfad der zuletzt erfolgreich geschriebenen Vorgänger-Version - Rettungsanker bei beschädigter Hauptdatei.</summary>
+    private string BackupFilePath { get; }
+
     public DataStore()
     {
         FilePath = ResolveFilePath();
+        BackupFilePath = Path.Combine(Path.GetDirectoryName(FilePath)!, BackupFileName);
     }
 
     private static string ResolveFilePath()
@@ -65,25 +70,40 @@ public sealed class DataStore
     }
 
     /// <summary>
-    /// Lädt den gespeicherten Zustand. Existiert noch keine Datei oder ist sie
-    /// beschädigt, wird ein leerer Zustand zurückgegeben - MouseMeter beginnt
-    /// dann einfach wieder bei Null, anstatt abzustürzen.
+    /// Lädt den gespeicherten Zustand. Ist die Hauptdatei beschädigt oder
+    /// nicht lesbar, wird stattdessen die zuletzt erfolgreich geschriebene
+    /// Sicherungskopie geladen (siehe <see cref="Save"/>) - so geht die
+    /// gesamte Historie nicht schon bei einem einzelnen defekten Schreibvorgang
+    /// verloren. Existiert auch die überhaupt keine, beginnt MouseMeter
+    /// einfach wieder bei Null, anstatt abzustürzen.
     /// </summary>
     public AppState Load()
     {
+        AppState? state = TryLoad(FilePath);
+        if (state is not null)
+        {
+            return state;
+        }
+
+        state = TryLoad(BackupFilePath);
+        return state ?? new AppState();
+    }
+
+    private static AppState? TryLoad(string path)
+    {
         try
         {
-            if (!File.Exists(FilePath))
+            if (!File.Exists(path))
             {
-                return new AppState();
+                return null;
             }
 
-            string json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<AppState>(json, SerializerOptions) ?? new AppState();
+            string json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<AppState>(json, SerializerOptions);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
-            return new AppState();
+            return null;
         }
     }
 
@@ -91,12 +111,19 @@ public sealed class DataStore
     /// Speichert den Zustand. Schreibt zunächst in eine temporäre Datei und
     /// ersetzt die eigentliche Datei erst danach - so bleibt bei einem
     /// Absturz mitten im Schreibvorgang immer eine vollständige Version
-    /// erhalten.
+    /// erhalten. Die bisherige Hauptdatei wird zuvor als Sicherungskopie
+    /// abgelegt, damit ein beschädigtes oder unvollständiges Schreiben nicht
+    /// die gesamte bisherige Historie mitreißt (siehe <see cref="Load"/>).
     /// </summary>
     public void Save(AppState state)
     {
         try
         {
+            if (File.Exists(FilePath))
+            {
+                File.Copy(FilePath, BackupFilePath, overwrite: true);
+            }
+
             string json = JsonSerializer.Serialize(state, SerializerOptions);
             string tempPath = FilePath + ".tmp";
             File.WriteAllText(tempPath, json);

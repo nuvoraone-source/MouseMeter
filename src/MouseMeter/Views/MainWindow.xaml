@@ -221,9 +221,8 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <!-- Kennzahl-Auswahl: nur bei Woche/Monat/Jahr sichtbar, siehe Code-Behind -->
                     <UniformGrid x:Name="MetricSelector" Grid.Row="0" Rows="1" Columns="4"
-                                 Margin="0,0,0,10" Visibility="Collapsed">
+                                 Margin="0,0,0,10">
                         <RadioButton x:Name="MetricDistance" Content="Strecke" GroupName="Kennzahl"
                                      Style="{StaticResource PeriodButton}" IsChecked="True"
                                      Checked="OnMetricChanged" />
@@ -239,15 +238,8 @@
                     </UniformGrid>
 
                     <Grid Grid.Row="1">
-                        <TextBlock x:Name="ChartPlaceholderText"
-                                   Style="{StaticResource BodyText}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   TextAlignment="Center" MaxWidth="420"
-                                   Text="Ein Verlauf über den Tag benötigt eine feinere Zeitauflösung, als aktuell gespeichert wird - MouseMeter merkt sich nur Tageswerte. Unter Woche, Monat oder Jahr gibt es bereits ein Diagramm." />
-
                         <UniformGrid x:Name="ChartBarsPanel" Rows="1"
-                                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                                     Visibility="Collapsed" />
+                                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
                     </Grid>
                 </Grid>
             </Border>

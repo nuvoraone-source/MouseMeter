@@ -29,7 +29,11 @@ namespace MouseMeter.Views;
 /// Symbol in die Ablage neben der Uhr - seit v1.0.2 gilt das beim
 /// automatischen Windows-Start von Anfang an, ohne dass das Fenster jemals
 /// sichtbar aufblitzt (siehe <see cref="App"/> und
-/// <see cref="Infrastructure.AutostartManager.StartMinimizedArg"/>).
+/// <see cref="Infrastructure.AutostartManager.StartMinimizedArg"/>). Seit
+/// v1.1.0 werden die Tageswerte zusätzlich stundengenau erfasst
+/// (<see cref="Infrastructure.Storage.DailyStats.Hours"/>), sodass auch
+/// "Tag" ein echtes Balkendiagramm zeigt statt eines erklärenden
+/// Hinweistextes.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -57,6 +61,22 @@ public partial class MainWindow : Window
     private readonly DataStore _dataStore = new();
     private readonly AppState _appState;
     private DateOnly _currentDay;
+
+    // Stundengenaue Aufschlüsselung des Tages (Abschnitt 5 des Screenshots:
+    // Diagramm für "Tag"): die Tracker liefern nur kumulierte Tageswerte, ein
+    // Stunden-Balken ergibt sich deshalb aus der Differenz zum Stand bei
+    // Beginn der jeweiligen Stunde. _currentHour und die _hourStart*-Felder
+    // halten diesen Bezugspunkt fest und werden bei jedem Stundenwechsel in
+    // CaptureLiveToday() auf den dann aktuellen Stand verschoben.
+    private int _currentHour;
+    private double _hourStartDistanceMeters;
+    private double _hourStartActiveSeconds;
+    private long _hourStartLeftClicks;
+    private long _hourStartRightClicks;
+    private long _hourStartMiddleClicks;
+    private long _hourStartKeystrokes;
+    private long _hourStartScrollForward;
+    private long _hourStartScrollBackward;
 
     // Momentaufnahme der Strecke beim letzten Neuzeichnen - Grundlage fuer
     // die aktuelle Geschwindigkeit (Distanz-Differenz je Messfenster).
@@ -132,14 +152,46 @@ public partial class MainWindow : Window
             }
             _appState.AutostartInitialized = true;
         }
+        else
+        {
+            // Ist Autostart bereits aktiv, aber der hinterlegte Registry-Eintrag
+            // stammt noch aus einer älteren Version (z. B. ohne
+            // StartMinimizedArg), reparieren wir ihn hier - sonst startet
+            // MouseMeter beim automatischen Windows-Start dauerhaft sichtbar
+            // statt direkt in der Ablage.
+            try
+            {
+                AutostartManager.RepairIfEnabled();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Kein Zugriff auf die Registry - nichts zu reparieren.
+            }
+        }
 
         _currentDay = DateOnly.FromDateTime(DateTime.Now);
+        _currentHour = DateTime.Now.Hour;
         if (_appState.Days.TryGetValue(DayKey(_currentDay), out DailyStats? today))
         {
             _distanceTracker.Seed(today.DistanceMeters, TimeSpan.FromSeconds(today.ActiveSeconds));
             _clickTracker.Seed(today.LeftClicks, today.RightClicks, today.MiddleClicks);
             _keystrokeTracker.Seed(today.Keystrokes);
             _scrollTracker.Seed(today.ScrollForward, today.ScrollBackward);
+
+            // Bezugspunkt für die laufende Stunde wiederherstellen: die
+            // bereits für sie gespeicherte Teilsumme vom kumulierten
+            // Tagesstand abziehen, damit ihr Balken nach einem Neustart
+            // mitten in der Stunde nahtlos weiterläuft statt bei Null oder
+            // beim vollen Tagesstand neu anzusetzen.
+            HourlyStats savedHour = today.Hours[_currentHour];
+            _hourStartDistanceMeters = today.DistanceMeters - savedHour.DistanceMeters;
+            _hourStartActiveSeconds = today.ActiveSeconds - savedHour.ActiveSeconds;
+            _hourStartLeftClicks = today.LeftClicks - savedHour.LeftClicks;
+            _hourStartRightClicks = today.RightClicks - savedHour.RightClicks;
+            _hourStartMiddleClicks = today.MiddleClicks - savedHour.MiddleClicks;
+            _hourStartKeystrokes = today.Keystrokes - savedHour.Keystrokes;
+            _hourStartScrollForward = today.ScrollForward - savedHour.ScrollForward;
+            _hourStartScrollBackward = today.ScrollBackward - savedHour.ScrollBackward;
         }
         _lastSampleDistanceMeters = _distanceTracker.TotalDistanceMeters;
         _recordSpeedMetersPerSecond = _appState.AllTimeRecordSpeedMetersPerSecond;
@@ -202,20 +254,73 @@ public partial class MainWindow : Window
         _keystrokeTracker.ResetForNewDay();
         _scrollTracker.ResetForNewDay();
         _lastSampleDistanceMeters = 0;
+
+        _currentHour = DateTime.Now.Hour;
+        _hourStartDistanceMeters = 0;
+        _hourStartActiveSeconds = 0;
+        _hourStartLeftClicks = 0;
+        _hourStartRightClicks = 0;
+        _hourStartMiddleClicks = 0;
+        _hourStartKeystrokes = 0;
+        _hourStartScrollForward = 0;
+        _hourStartScrollBackward = 0;
     }
 
-    /// <summary>Momentaufnahme der heutigen Live-Werte im Speicherformat - dient sowohl der Anzeige als auch dem Sichern.</summary>
-    private DailyStats CaptureLiveToday() => new()
+    /// <summary>
+    /// Momentaufnahme der heutigen Live-Werte im Speicherformat - dient
+    /// sowohl der Anzeige als auch dem Sichern. Schreibt dabei auch den
+    /// Stunden-Balken der gerade laufenden Stunde fort (siehe die
+    /// _hourStart*-Felder) und übernimmt die bereits abgeschlossenen Stunden
+    /// unverändert aus dem zuletzt gesicherten Stand.
+    /// </summary>
+    private DailyStats CaptureLiveToday()
     {
-        DistanceMeters = _distanceTracker.TotalDistanceMeters,
-        ActiveSeconds = _distanceTracker.Elapsed.TotalSeconds,
-        LeftClicks = _clickTracker.LeftClicks,
-        RightClicks = _clickTracker.RightClicks,
-        MiddleClicks = _clickTracker.MiddleClicks,
-        Keystrokes = _keystrokeTracker.TotalKeystrokes,
-        ScrollForward = _scrollTracker.ForwardScrolls,
-        ScrollBackward = _scrollTracker.BackwardScrolls,
-    };
+        var stats = new DailyStats
+        {
+            DistanceMeters = _distanceTracker.TotalDistanceMeters,
+            ActiveSeconds = _distanceTracker.Elapsed.TotalSeconds,
+            LeftClicks = _clickTracker.LeftClicks,
+            RightClicks = _clickTracker.RightClicks,
+            MiddleClicks = _clickTracker.MiddleClicks,
+            Keystrokes = _keystrokeTracker.TotalKeystrokes,
+            ScrollForward = _scrollTracker.ForwardScrolls,
+            ScrollBackward = _scrollTracker.BackwardScrolls,
+        };
+
+        stats.Hours = _appState.Days.TryGetValue(DayKey(_currentDay), out DailyStats? existing)
+            ? (HourlyStats[])existing.Hours.Clone()
+            : new HourlyStats[24];
+
+        int hour = DateTime.Now.Hour;
+        if (hour != _currentHour)
+        {
+            // Stunde gewechselt - die jetzt beginnende Stunde startet bei
+            // Null, ihr Bezugspunkt ist also einfach der aktuelle Tagesstand.
+            _hourStartDistanceMeters = stats.DistanceMeters;
+            _hourStartActiveSeconds = stats.ActiveSeconds;
+            _hourStartLeftClicks = stats.LeftClicks;
+            _hourStartRightClicks = stats.RightClicks;
+            _hourStartMiddleClicks = stats.MiddleClicks;
+            _hourStartKeystrokes = stats.Keystrokes;
+            _hourStartScrollForward = stats.ScrollForward;
+            _hourStartScrollBackward = stats.ScrollBackward;
+            _currentHour = hour;
+        }
+
+        stats.Hours[_currentHour] = new HourlyStats
+        {
+            DistanceMeters = stats.DistanceMeters - _hourStartDistanceMeters,
+            ActiveSeconds = stats.ActiveSeconds - _hourStartActiveSeconds,
+            LeftClicks = stats.LeftClicks - _hourStartLeftClicks,
+            RightClicks = stats.RightClicks - _hourStartRightClicks,
+            MiddleClicks = stats.MiddleClicks - _hourStartMiddleClicks,
+            Keystrokes = stats.Keystrokes - _hourStartKeystrokes,
+            ScrollForward = stats.ScrollForward - _hourStartScrollForward,
+            ScrollBackward = stats.ScrollBackward - _hourStartScrollBackward,
+        };
+
+        return stats;
+    }
 
     /// <summary>Schreibt den aktuellen Stand des heutigen Tages und den Rekord auf die Festplatte.</summary>
     private void SaveState()
@@ -317,23 +422,16 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Zeichnet das Balkendiagramm für Woche/Monat/Jahr neu (ein Balken pro
-    /// Tag bzw. bei "Jahr" pro Monat, siehe <see cref="ChartSeriesBuilder"/>).
-    /// Für "Tag" fehlt die nötige stundengenaue Auflösung - dort bleibt es
-    /// beim erklärenden Hinweistext.
+    /// Zeichnet das Balkendiagramm neu: ein Balken pro Stunde ("Tag"), pro Tag
+    /// (Woche/Monat) bzw. pro Monat ("Jahr") - siehe <see cref="ChartSeriesBuilder"/>.
     /// </summary>
     private void RenderChart()
     {
-        bool isDay = _selectedPeriod == DashboardPeriod.Day;
-
-        MetricSelector.Visibility = isDay ? Visibility.Collapsed : Visibility.Visible;
-        ChartBarsPanel.Visibility = isDay ? Visibility.Collapsed : Visibility.Visible;
-        ChartPlaceholderText.Visibility = isDay ? Visibility.Visible : Visibility.Collapsed;
-
-        if (isDay)
-        {
-            return;
-        }
+        // Seit v1.1.0 gibt es für jeden Zeitraum ein echtes Diagramm - die
+        // beiden Elemente starten in XAML eingeklappt (Grundzustand vor
+        // dieser Version) und werden hier dauerhaft sichtbar geschaltet.
+        MetricSelector.Visibility = Visibility.Visible;
+        ChartBarsPanel.Visibility = Visibility.Visible;
 
         var today = DateOnly.FromDateTime(DateTime.Now);
         List<ChartDataPoint> series = ChartSeriesBuilder.Build(_appState, today, _selectedPeriod, CaptureLiveToday(), _selectedMetric);
@@ -438,7 +536,7 @@ public partial class MainWindow : Window
 
     private void OnPeriodChanged(object sender, RoutedEventArgs e)
     {
-        if (sender is not RadioButton { IsChecked: true } selected || ChartPlaceholderText is null)
+        if (sender is not RadioButton { IsChecked: true } selected || ChartBarsPanel is null)
         {
             return;
         }
@@ -468,7 +566,7 @@ public partial class MainWindow : Window
 
     private void OnSettingsClick(object sender, RoutedEventArgs e)
     {
-        new SettingsWindow { Owner = this }.ShowDialog();
+        new SettingsWindow(_dataStore.FilePath, _appState) { Owner = this }.ShowDialog();
     }
 
     private void OnNuvoraClick(object sender, MouseButtonEventArgs e)
