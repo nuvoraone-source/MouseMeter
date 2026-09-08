@@ -31,6 +31,7 @@ public partial class SettingsWindow : Window
         InitializeComponent();
 
         AutostartCheckBox.IsChecked = AutostartManager.IsEnabled();
+        AutoUpdateCheckBox.IsChecked = _appState.AutoUpdateEnabled;
         _isInitializing = false;
 
         DataFilePathText.Text = _dataFilePath;
@@ -59,6 +60,18 @@ public partial class SettingsWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
+    }
+
+    private void OnAutoUpdateToggled(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing)
+        {
+            return;
+        }
+
+        // Wird zusammen mit den übrigen Daten vom periodischen Speicher-Timer
+        // des Hauptfensters weggeschrieben (dieselbe AppState-Instanz).
+        _appState.AutoUpdateEnabled = AutoUpdateCheckBox.IsChecked == true;
     }
 
     private void OnOpenDataFolderClick(object sender, RoutedEventArgs e)

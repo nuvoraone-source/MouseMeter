@@ -89,6 +89,14 @@ public partial class MainWindow : Window
     private DashboardPeriod _selectedPeriod = DashboardPeriod.Day;
     private ChartMetric _selectedMetric = ChartMetric.Distance;
 
+    // Wird alle 200ms neu befuellt (Live-Anzeige), damit dabei kein Tooltip
+    // auf den Balken kaputt geht, muessen bei unveraenderter Struktur (Zeitraum,
+    // Kennzahl, Balkenzahl) dieselben Elemente wiederverwendet werden statt sie
+    // jedes Mal neu zu erzeugen - siehe RenderChart().
+    private readonly List<(Grid BarHost, Border Bar, TextBlock ValueLabel)> _chartCells = new();
+    private DashboardPeriod? _chartCellsPeriod;
+    private ChartMetric? _chartCellsMetric;
+
     // Bei automatischem Windows-Start (siehe AutostartManager.StartMinimizedArg)
     // soll nur der Startbildschirm zu sehen sein - das Hauptfenster selbst
     // legt sich direkt in die Ablage, statt sichtbar zu erscheinen.
@@ -195,6 +203,14 @@ public partial class MainWindow : Window
         }
         _lastSampleDistanceMeters = _distanceTracker.TotalDistanceMeters;
         _recordSpeedMetersPerSecond = _appState.AllTimeRecordSpeedMetersPerSecond;
+
+        // Update-Prüfung läuft unabhängig vom UI-Thread im Hintergrund und
+        // stört den Start nicht - siehe UpdateManager für den Ablauf und
+        // warum ein Fehlschlag hier nie sichtbar wird.
+        _ = UpdateManager.CheckAndApplyAsync(
+            _appState,
+            save: () => _dataStore.Save(_appState),
+            applyAndShutdown: () => Dispatcher.Invoke(() => Application.Current.Shutdown()));
 
         RenderDashboard();
 
@@ -444,26 +460,73 @@ public partial class MainWindow : Window
             max = 1; // vermeidet Division durch Null, wenn noch nichts erfasst wurde
         }
 
+        const double chartHeight = 92;
+
+        // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert zu jedem
+        // Balken. Bei Tag/Monat (24 bzw. bis zu 31 schmale Balken) würde das
+        // ausgeschrieben überlappen - dort wird deshalb überall die kompakte
+        // Kurzform verwendet, aber an jedem Balken (Abschnitt "in der
+        // Stunden- und Monatsansicht muss an jedem Balken ein Wert angezeigt
+        // werden").
+        bool isNarrow = series.Count > 12;
+
+        bool structureChanged = _chartCellsPeriod != _selectedPeriod
+            || _chartCellsMetric != _selectedMetric
+            || _chartCells.Count != series.Count;
+
+        if (structureChanged)
+        {
+            RebuildChartCells(series, chartHeight, isNarrow);
+            _chartCellsPeriod = _selectedPeriod;
+            _chartCellsMetric = _selectedMetric;
+        }
+
+        // Bestehende Elemente nur aktualisieren statt neu zu erzeugen - wird
+        // dieselbe Instanz alle 200ms unter dem Mauszeiger ausgetauscht, kommt
+        // der Tooltip nie zum Anzeigen, weil WPF das als neues Hover-Ziel ohne
+        // Verweildauer behandelt.
+        for (int i = 0; i < series.Count; i++)
+        {
+            ChartDataPoint point = series[i];
+            (Grid barHost, Border bar, TextBlock valueLabel) = _chartCells[i];
+
+            bar.Height = Math.Max(2, point.Value / max * chartHeight);
+            barHost.ToolTip = point.Value > 0 ? point.Tooltip : null;
+            valueLabel.Text = isNarrow
+                ? Formatting.CompactMetricValue(_selectedMetric, point.Value)
+                : Formatting.MetricValue(_selectedMetric, point.Value);
+        }
+    }
+
+    private void RebuildChartCells(List<ChartDataPoint> series, double chartHeight, bool isNarrow)
+    {
         ChartBarsPanel.Columns = Math.Max(1, series.Count);
         ChartBarsPanel.Children.Clear();
-
-        const double chartHeight = 92;
+        _chartCells.Clear();
 
         foreach (ChartDataPoint point in series)
         {
-            double barHeight = Math.Max(2, point.Value / max * chartHeight);
-
             var bar = new Border
             {
-                Height = barHeight,
+                Height = 2,
                 CornerRadius = new CornerRadius(3, 3, 0, 0),
                 Background = (Brush)FindResource("AccentGradientBrush"),
                 VerticalAlignment = VerticalAlignment.Bottom,
                 Margin = new Thickness(2, 0, 2, 0),
-                ToolTip = point.Tooltip,
+                IsHitTestVisible = false,
             };
 
-            var barHost = new Grid { Height = chartHeight, VerticalAlignment = VerticalAlignment.Bottom };
+            // Transparent statt null, damit auch der leere Bereich über einem
+            // niedrigen Balken (Mindesthöhe 2px) auf Hover reagiert - sonst
+            // ist der Tooltip bei kleinen Werten praktisch nicht zu treffen.
+            // Bei Wert 0 (z. B. noch nicht erreichte Stunden) gibt es nichts
+            // zu zeigen, daher dort ganz ohne Tooltip.
+            var barHost = new Grid
+            {
+                Height = chartHeight,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Background = Brushes.Transparent,
+            };
             barHost.Children.Add(bar);
 
             var label = new TextBlock
@@ -476,32 +539,22 @@ public partial class MainWindow : Window
                 Margin = new Thickness(0, 4, 0, 0),
             };
 
-            var cell = new StackPanel();
-
-            // Bei Woche/Jahr (bis zu 12 Balken) passt der genaue Wert zu
-            // jedem Balken. Bei Tag/Monat (24 bzw. bis zu 31 schmale Balken)
-            // würde das ausgeschrieben überlappen - dort wird deshalb überall
-            // die kompakte Kurzform verwendet, aber an jedem Balken (Abschnitt
-            // "in der Stunden- und Monatsansicht muss an jedem Balken ein Wert
-            // angezeigt werden").
-            bool isNarrow = series.Count > 12;
-
-            cell.Children.Add(new TextBlock
+            var valueLabel = new TextBlock
             {
-                Text = isNarrow
-                    ? Formatting.CompactMetricValue(_selectedMetric, point.Value)
-                    : Formatting.MetricValue(_selectedMetric, point.Value),
                 FontFamily = (FontFamily)FindResource("UiFont"),
                 FontSize = isNarrow ? 8 : 9,
                 Foreground = (Brush)FindResource("TextPrimaryBrush"),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 3),
-            });
+            };
 
+            var cell = new StackPanel();
+            cell.Children.Add(valueLabel);
             cell.Children.Add(barHost);
             cell.Children.Add(label);
 
             ChartBarsPanel.Children.Add(cell);
+            _chartCells.Add((barHost, bar, valueLabel));
         }
     }
 

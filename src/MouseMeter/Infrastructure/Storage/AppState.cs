@@ -22,4 +22,14 @@ public sealed class AppState
     /// den Einstellungen wird danach nicht mehr überschrieben.
     /// </summary>
     public bool AutostartInitialized { get; set; }
+
+    /// <summary>
+    /// Ob MouseMeter neue Versionen automatisch im Hintergrund von GitHub
+    /// herunterlädt und installiert (Einstellungen &gt; Updates). Standardmäßig
+    /// aktiviert; der Nutzer kann es jederzeit abschalten - siehe <see cref="Infrastructure.UpdateManager"/>.
+    /// </summary>
+    public bool AutoUpdateEnabled { get; set; } = true;
+
+    /// <summary>Zeitpunkt (UTC) der letzten Update-Prüfung, um nicht bei jedem Start erneut zu prüfen.</summary>
+    public DateTime LastUpdateCheckUtc { get; set; }
 }

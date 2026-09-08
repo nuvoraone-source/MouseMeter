@@ -59,7 +59,7 @@ public static class ChartSeriesBuilder
         {
             double value = hour <= currentHour ? MetricValue(liveToday.Hours[hour], metric) : 0;
             string label = hour % 3 == 0 ? $"{hour}" : string.Empty;
-            points.Add(new ChartDataPoint(label, value, $"{hour:00}-{hour + 1:00} Uhr - {Formatting.MetricValue(metric, value)}"));
+            points.Add(new ChartDataPoint(label, value, Formatting.TooltipMetricValue(metric, value)));
         }
 
         return points;
@@ -75,7 +75,7 @@ public static class ChartSeriesBuilder
             DateOnly day = start.AddDays(i);
             DailyStats? stats = day <= today ? GetDay(state, day, today, liveToday) : null;
             double value = stats is null ? 0 : MetricValue(stats, metric);
-            points.Add(new ChartDataPoint(WeekdayNames[i], value, $"{WeekdayNames[i]} {day:dd.MM.} - {Formatting.MetricValue(metric, value)}"));
+            points.Add(new ChartDataPoint(WeekdayNames[i], value, $"{WeekdayNames[i]} {day:dd.MM.} - {Formatting.TooltipMetricValue(metric, value)}"));
         }
 
         return points;
@@ -98,7 +98,7 @@ public static class ChartSeriesBuilder
             bool showLabel = i == 0 || i == daysInMonth - 1 || (i + 1) % 5 == 0;
             string label = showLabel ? (i + 1).ToString() : string.Empty;
 
-            points.Add(new ChartDataPoint(label, value, $"{day:dd.MM.} - {Formatting.MetricValue(metric, value)}"));
+            points.Add(new ChartDataPoint(label, value, $"{day:dd.MM.} - {Formatting.TooltipMetricValue(metric, value)}"));
         }
 
         return points;
@@ -114,7 +114,7 @@ public static class ChartSeriesBuilder
 
             if (month > today.Month)
             {
-                points.Add(new ChartDataPoint(name, 0, $"{name} - {Formatting.MetricValue(metric, 0)}"));
+                points.Add(new ChartDataPoint(name, 0, $"{name} - {Formatting.TooltipMetricValue(metric, 0)}"));
                 continue;
             }
 
@@ -148,7 +148,7 @@ public static class ChartSeriesBuilder
                 ? (sumActiveSeconds > 0 ? sumDistance / sumActiveSeconds : 0)
                 : sum;
 
-            points.Add(new ChartDataPoint(name, value, $"{name} - {Formatting.MetricValue(metric, value)}"));
+            points.Add(new ChartDataPoint(name, value, $"{name} - {Formatting.TooltipMetricValue(metric, value)}"));
         }
 
         return points;

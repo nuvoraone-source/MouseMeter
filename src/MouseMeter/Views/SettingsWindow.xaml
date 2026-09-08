@@ -51,6 +51,22 @@
 
             <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
 
+            <TextBlock Text="Updates" Style="{StaticResource TileLabelText}" />
+            <CheckBox x:Name="AutoUpdateCheckBox"
+                      Content="Updates automatisch installieren"
+                      Checked="OnAutoUpdateToggled"
+                      Unchecked="OnAutoUpdateToggled"
+                      Cursor="Hand"
+                      Margin="0,8,0,0"
+                      FontFamily="{StaticResource UiFont}"
+                      FontSize="12"
+                      Foreground="{StaticResource TextPrimaryBrush}" />
+            <TextBlock Style="{StaticResource BodyText}" Margin="0,6,0,0"
+                       TextWrapping="Wrap"
+                       Text="Neue Versionen werden im Hintergrund von GitHub geladen und beim nächsten Neustart von MouseMeter automatisch installiert." />
+
+            <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
+
             <TextBlock Text="Daten" Style="{StaticResource TileLabelText}" />
             <TextBlock x:Name="DataFilePathText"
                        Style="{StaticResource BodyText}"
