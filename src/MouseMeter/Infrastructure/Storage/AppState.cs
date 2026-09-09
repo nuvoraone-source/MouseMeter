@@ -24,9 +24,11 @@ public sealed class AppState
     public bool AutostartInitialized { get; set; }
 
     /// <summary>
-    /// Ob MouseMeter neue Versionen automatisch im Hintergrund von GitHub
-    /// herunterlädt und installiert (Einstellungen &gt; Updates). Standardmäßig
-    /// aktiviert; der Nutzer kann es jederzeit abschalten - siehe <see cref="Infrastructure.UpdateManager"/>.
+    /// Ob MouseMeter regelmäßig im Hintergrund auf GitHub nach einer neueren
+    /// Version sucht (Einstellungen &gt; Updates). Installiert wird dabei
+    /// nichts von selbst - nur ein gefundenes Update wird über das
+    /// Update-Lämpchen angezeigt und muss vom Nutzer bestätigt werden.
+    /// Standardmäßig aktiviert, jederzeit abschaltbar - siehe <see cref="Infrastructure.UpdateManager"/>.
     /// </summary>
     public bool AutoUpdateEnabled { get; set; } = true;
 

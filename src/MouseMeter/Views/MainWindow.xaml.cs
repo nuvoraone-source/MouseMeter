@@ -97,6 +97,14 @@ public partial class MainWindow : Window
     private DashboardPeriod? _chartCellsPeriod;
     private ChartMetric? _chartCellsMetric;
 
+    // Update-Prüfung läuft nur automatisch (kein automatisches Installieren,
+    // siehe UpdateManager) - 1 Stunde nach dem Start, danach alle 24 Stunden.
+    // Ein gefundenes Update wird erst installiert, wenn der Nutzer auf das
+    // rote Lämpchen in der Statusleiste klickt.
+    private readonly DispatcherTimer _updateCheckTimer = new();
+    private UpdateInfo? _availableUpdate;
+    private bool _updateInProgress;
+
     // Bei automatischem Windows-Start (siehe AutostartManager.StartMinimizedArg)
     // soll nur der Startbildschirm zu sehen sein - das Hauptfenster selbst
     // legt sich direkt in die Ablage, statt sichtbar zu erscheinen.
@@ -204,13 +212,12 @@ public partial class MainWindow : Window
         _lastSampleDistanceMeters = _distanceTracker.TotalDistanceMeters;
         _recordSpeedMetersPerSecond = _appState.AllTimeRecordSpeedMetersPerSecond;
 
-        // Update-Prüfung läuft unabhängig vom UI-Thread im Hintergrund und
-        // stört den Start nicht - siehe UpdateManager für den Ablauf und
-        // warum ein Fehlschlag hier nie sichtbar wird.
-        _ = UpdateManager.CheckAndApplyAsync(
-            _appState,
-            save: () => _dataStore.Save(_appState),
-            applyAndShutdown: () => Dispatcher.Invoke(() => Application.Current.Shutdown()));
+        // Erste Update-Prüfung 1 Stunde nach dem Start, danach alle 24 Stunden
+        // (siehe UpdateManager) - läuft im Hintergrund, installiert nichts
+        // von selbst.
+        _updateCheckTimer.Interval = UpdateManager.FirstCheckDelay;
+        _updateCheckTimer.Tick += OnUpdateCheckTimerTick;
+        _updateCheckTimer.Start();
 
         RenderDashboard();
 
@@ -346,6 +353,78 @@ public partial class MainWindow : Window
         _appState.AllTimeRecordSpeedMetersPerSecond = _recordSpeedMetersPerSecond;
 
         _dataStore.Save(_appState);
+    }
+
+    private async void OnUpdateCheckTimerTick(object? sender, EventArgs e)
+    {
+        // Erster Tick kommt nach FirstCheckDelay (1h) - danach auf das
+        // eigentliche 24h-Intervall umstellen, damit nicht stündlich geprüft wird.
+        _updateCheckTimer.Interval = UpdateManager.CheckInterval;
+
+        if (_availableUpdate is not null)
+        {
+            return;
+        }
+
+        _availableUpdate = await UpdateManager.CheckForUpdateAsync(_appState, () => _dataStore.Save(_appState))
+            .ConfigureAwait(true);
+
+        UpdateIndicator.Visibility = _availableUpdate is not null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private async void OnUpdateIndicatorClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_availableUpdate is not { } update || _updateInProgress)
+        {
+            return;
+        }
+
+        var confirm = MessageBox.Show(
+            this,
+            $"Version {update.Version} vom {update.PublishedAtUtc.ToLocalTime():dd.MM.yyyy} installieren?\n\nMouseMeter wird dazu kurz beendet und automatisch neu gestartet.",
+            "Update installieren",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _updateInProgress = true;
+        try
+        {
+            UpdateApplyResult result = await UpdateManager.DownloadAndInstallAsync(
+                update,
+                applyAndShutdown: () => Dispatcher.Invoke(() => Application.Current.Shutdown())).ConfigureAwait(true);
+
+            switch (result)
+            {
+                case UpdateApplyResult.Started:
+                    // Anwendung beendet sich gleich selbst (applyAndShutdown) - nichts mehr zu tun.
+                    break;
+                case UpdateApplyResult.ChecksumMismatch:
+                    MessageBox.Show(
+                        this,
+                        "Die heruntergeladene Datei stimmt nicht mit der erwarteten Prüfsumme überein und wurde sicherheitshalber nicht installiert.",
+                        "Update",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    break;
+                default:
+                    MessageBox.Show(
+                        this,
+                        "Das Update konnte nicht heruntergeladen oder installiert werden. Bitte später erneut versuchen.",
+                        "Update",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    break;
+            }
+        }
+        finally
+        {
+            _updateInProgress = false;
+        }
     }
 
     // Beim Minimieren verschwindet MouseMeter komplett aus der Taskleiste und

@@ -251,6 +251,23 @@
                 <TextBlock x:Name="StatusText" Style="{StaticResource FooterText}" />
             </StackPanel>
 
+            <StackPanel x:Name="UpdateIndicator"
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        Visibility="Collapsed"
+                        ToolTip="Update verfügbar - anklicken zum Installieren"
+                        MouseLeftButtonUp="OnUpdateIndicatorClick">
+                <Ellipse Width="7" Height="7"
+                         Margin="0,0,6,0"
+                         VerticalAlignment="Center"
+                         Fill="{StaticResource StatusUpdateBrush}" />
+                <TextBlock Text="Update" Style="{StaticResource FooterText}" />
+            </StackPanel>
+
             <TextBlock x:Name="NuvoraLinkText"
                        Grid.Column="2"
                        Text="nuvora"

@@ -53,7 +53,7 @@
 
             <TextBlock Text="Updates" Style="{StaticResource TileLabelText}" />
             <CheckBox x:Name="AutoUpdateCheckBox"
-                      Content="Updates automatisch installieren"
+                      Content="Automatisch nach Updates suchen"
                       Checked="OnAutoUpdateToggled"
                       Unchecked="OnAutoUpdateToggled"
                       Cursor="Hand"
@@ -63,7 +63,7 @@
                       Foreground="{StaticResource TextPrimaryBrush}" />
             <TextBlock Style="{StaticResource BodyText}" Margin="0,6,0,0"
                        TextWrapping="Wrap"
-                       Text="Neue Versionen werden im Hintergrund von GitHub geladen und beim nächsten Neustart von MouseMeter automatisch installiert." />
+                       Text="MouseMeter prüft dabei regelmäßig im Hintergrund auf GitHub, ob eine neuere Version verfügbar ist. Installiert wird nichts von selbst - bei einem gefundenen Update erscheint unten in der Statusleiste ein rotes Lämpchen, über das die Installation erst nach Bestätigung gestartet wird." />
 
             <Border BorderBrush="{StaticResource StrokeBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,14" />
 

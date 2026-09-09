@@ -13,6 +13,7 @@
     <Color x:Key="AccentBColor">#22D3EE</Color>
     <Color x:Key="StatusOkColor">#34D399</Color>
     <Color x:Key="StatusOffColor">#6B7484</Color>
+    <Color x:Key="StatusUpdateColor">#F87171</Color>
 
     <SolidColorBrush x:Key="BgBaseBrush" Color="{StaticResource BgBaseColor}" />
     <SolidColorBrush x:Key="BgSurfaceBrush" Color="{StaticResource BgSurfaceColor}" />
@@ -23,6 +24,7 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentBColor}" />
     <SolidColorBrush x:Key="StatusOkBrush" Color="{StaticResource StatusOkColor}" />
     <SolidColorBrush x:Key="StatusOffBrush" Color="{StaticResource StatusOffColor}" />
+    <SolidColorBrush x:Key="StatusUpdateBrush" Color="{StaticResource StatusUpdateColor}" />
 
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="{StaticResource AccentAColor}" Offset="0" />
