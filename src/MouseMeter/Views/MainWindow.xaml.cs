@@ -87,6 +87,7 @@ public partial class MainWindow : Window
     private double _recordSpeedMetersPerSecond;
 
     private DashboardPeriod _selectedPeriod = DashboardPeriod.Day;
+    private int _selectedDayOffset; // 0 = Montag ... 6 = Sonntag, gilt bei Zeitraum "Tag"
     private ChartMetric _selectedMetric = ChartMetric.Distance;
 
     // Wird alle 200ms neu befuellt (Live-Anzeige), damit dabei kein Tooltip
@@ -219,7 +220,10 @@ public partial class MainWindow : Window
         _updateCheckTimer.Tick += OnUpdateCheckTimerTick;
         _updateCheckTimer.Start();
 
-        RenderDashboard();
+        // Beim Start ist der heutige Wochentag gewählt; das Setzen löst über
+        // OnPeriodChanged das erste Zeichnen aus.
+        RefreshDayButtons();
+        DayButtons[WeekdayOffset(_currentDay)].IsChecked = true;
 
         Loaded += OnLoaded;
         StateChanged += OnStateChanged;
@@ -271,6 +275,9 @@ public partial class MainWindow : Window
 
         SaveState();
 
+        bool followToday = _selectedPeriod == DashboardPeriod.Day
+            && _selectedDayOffset == WeekdayOffset(_currentDay);
+
         _currentDay = today;
         _distanceTracker.ResetForNewDay();
         _clickTracker.ResetForNewDay();
@@ -287,6 +294,19 @@ public partial class MainWindow : Window
         _hourStartKeystrokes = 0;
         _hourStartScrollForward = 0;
         _hourStartScrollBackward = 0;
+
+        // Wer den heutigen Tag angesehen hat, soll beim Tageswechsel auf den
+        // neuen Tag mitwandern; kommende Tage bleiben ausgegraut.
+        RefreshDayButtons();
+        int todayOffset = WeekdayOffset(today);
+        if (_selectedPeriod == DashboardPeriod.Day && (followToday || _selectedDayOffset > todayOffset))
+        {
+            DayButtons[todayOffset].IsChecked = true;
+        }
+        else if (_selectedPeriod == DashboardPeriod.Day)
+        {
+            UpdatePeriodRangeText();
+        }
     }
 
     /// <summary>
@@ -492,9 +512,12 @@ public partial class MainWindow : Window
 
         _recordSpeedMetersPerSecond = Math.Max(_recordSpeedMetersPerSecond, currentSpeed);
 
-        DailyStats display = PeriodAggregator.Aggregate(_appState, _currentDay, _selectedPeriod, CaptureLiveToday());
+        bool isDayView = _selectedPeriod == DashboardPeriod.Day;
+        DailyStats display = isDayView
+            ? GetDayStats(SelectedDay)
+            : PeriodAggregator.Aggregate(_appState, _currentDay, _selectedPeriod, CaptureLiveToday());
         double averageSpeed = display.ActiveSeconds > 0 ? display.DistanceMeters / display.ActiveSeconds : 0;
-        bool isToday = _selectedPeriod == DashboardPeriod.Day;
+        bool isToday = isDayView && SelectedDay == _currentDay;
 
         DistanceValueText.Text = Formatting.Distance(display.DistanceMeters);
         // Eine "aktuelle" Geschwindigkeit ergibt für einen zurückliegenden
@@ -531,7 +554,11 @@ public partial class MainWindow : Window
         ChartBarsPanel.Visibility = Visibility.Visible;
 
         var today = DateOnly.FromDateTime(DateTime.Now);
-        List<ChartDataPoint> series = ChartSeriesBuilder.Build(_appState, today, _selectedPeriod, CaptureLiveToday(), _selectedMetric);
+        bool isDayView = _selectedPeriod == DashboardPeriod.Day;
+        List<ChartDataPoint> series = ChartSeriesBuilder.Build(
+            _appState, today, _selectedPeriod, CaptureLiveToday(), _selectedMetric,
+            isDayView ? GetDayStats(SelectedDay) : null,
+            !isDayView || SelectedDay == _currentDay);
 
         double max = series.Count > 0 ? series.Max(p => p.Value) : 0;
         if (max <= 0)
@@ -666,22 +693,60 @@ public partial class MainWindow : Window
             return;
         }
 
-        _selectedPeriod = selected.Name switch
+        int dayIndex = Array.IndexOf(DayButtons, selected);
+        if (dayIndex >= 0)
         {
-            nameof(PeriodWeek) => DashboardPeriod.Week,
-            nameof(PeriodMonth) => DashboardPeriod.Month,
-            nameof(PeriodYear) => DashboardPeriod.Year,
-            _ => DashboardPeriod.Day,
-        };
+            _selectedPeriod = DashboardPeriod.Day;
+            _selectedDayOffset = dayIndex;
+        }
+        else
+        {
+            _selectedPeriod = selected.Name switch
+            {
+                nameof(PeriodMonth) => DashboardPeriod.Month,
+                nameof(PeriodYear) => DashboardPeriod.Year,
+                _ => DashboardPeriod.Week,
+            };
+        }
 
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        PeriodRangeText.Text = _selectedPeriod == DashboardPeriod.Day
-            ? string.Empty
-            : FormatRange(PeriodAggregator.GetStart(_selectedPeriod, today), today);
+        UpdatePeriodRangeText();
 
         // Sofort mit den Werten des neu gewählten Zeitraums neuzeichnen, statt
         // auf den nächsten Anzeige-Tick zu warten.
         RenderDashboard();
+    }
+
+    private RadioButton[] DayButtons =>
+        new[] { PeriodMon, PeriodTue, PeriodWed, PeriodThu, PeriodFri, PeriodSat, PeriodSun };
+
+    private static int WeekdayOffset(DateOnly day) => ((int)day.DayOfWeek + 6) % 7;
+
+    // Der gewählte Tag ergibt sich aus dem Wochentag-Button und der laufenden
+    // Woche - so wandert die Zuordnung beim Wochenwechsel automatisch mit.
+    private DateOnly SelectedDay =>
+        PeriodAggregator.GetStart(DashboardPeriod.Week, _currentDay).AddDays(_selectedDayOffset);
+
+    private DailyStats GetDayStats(DateOnly day) =>
+        day == _currentDay
+            ? CaptureLiveToday()
+            : _appState.Days.GetValueOrDefault(DayKey(day)) ?? new DailyStats();
+
+    private void UpdatePeriodRangeText()
+    {
+        PeriodRangeText.Text = _selectedPeriod == DashboardPeriod.Day
+            ? SelectedDay.ToString("dddd, dd.MM.yyyy", System.Globalization.CultureInfo.GetCultureInfo("de-DE"))
+            : FormatRange(PeriodAggregator.GetStart(_selectedPeriod, _currentDay), _currentDay);
+    }
+
+    // Kommende Wochentage gibt es noch nicht - ihre Tasten bleiben ausgegraut.
+    private void RefreshDayButtons()
+    {
+        int todayOffset = WeekdayOffset(_currentDay);
+        RadioButton[] buttons = DayButtons;
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            buttons[i].IsEnabled = i <= todayOffset;
+        }
     }
 
     private static string FormatRange(DateOnly start, DateOnly end) =>

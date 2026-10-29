@@ -166,6 +166,9 @@
                         <Trigger Property="IsChecked" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.35" />
+                        </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True" />

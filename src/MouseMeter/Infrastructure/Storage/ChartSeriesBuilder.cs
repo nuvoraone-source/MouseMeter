@@ -17,11 +17,12 @@ public static class ChartSeriesBuilder
     };
 
     public static List<ChartDataPoint> Build(
-        AppState state, DateOnly today, DashboardPeriod period, DailyStats liveToday, ChartMetric metric)
+        AppState state, DateOnly today, DashboardPeriod period, DailyStats liveToday, ChartMetric metric,
+        DailyStats? dayStats = null, bool dayIsToday = true)
     {
         return period switch
         {
-            DashboardPeriod.Day => BuildDay(liveToday, metric),
+            DashboardPeriod.Day => BuildDay(dayStats ?? liveToday, dayIsToday, metric),
             DashboardPeriod.Week => BuildWeek(state, today, liveToday, metric),
             DashboardPeriod.Month => BuildMonth(state, today, liveToday, metric),
             DashboardPeriod.Year => BuildYear(state, today, liveToday, metric),
@@ -50,14 +51,14 @@ public static class ChartSeriesBuilder
         _ => 0,
     };
 
-    private static List<ChartDataPoint> BuildDay(DailyStats liveToday, ChartMetric metric)
+    private static List<ChartDataPoint> BuildDay(DailyStats day, bool isToday, ChartMetric metric)
     {
         var points = new List<ChartDataPoint>(24);
-        int currentHour = DateTime.Now.Hour;
+        int currentHour = isToday ? DateTime.Now.Hour : 23;
 
         for (int hour = 0; hour < 24; hour++)
         {
-            double value = hour <= currentHour ? MetricValue(liveToday.Hours[hour], metric) : 0;
+            double value = hour <= currentHour ? MetricValue(day.Hours[hour], metric) : 0;
             string label = hour % 3 == 0 ? $"{hour}" : string.Empty;
             points.Add(new ChartDataPoint(label, value, Formatting.TooltipMetricValue(metric, value)));
         }

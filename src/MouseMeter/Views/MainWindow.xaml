@@ -56,20 +56,50 @@
         <!-- ==================== Zeitraum-Auswahl ==================== -->
         <StackPanel Grid.Row="1" Margin="0,18,0,0">
             <Border Style="{StaticResource Card}" Padding="4">
-                <UniformGrid Rows="1" Columns="4">
-                    <RadioButton x:Name="PeriodDay" Content="Tag" GroupName="Zeitraum"
-                                 Style="{StaticResource PeriodButton}" IsChecked="True"
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1.7*" />
+                        <ColumnDefinition Width="1.7*" />
+                        <ColumnDefinition Width="1.7*" />
+                    </Grid.ColumnDefinitions>
+                    <RadioButton x:Name="PeriodMon" Grid.Column="0" Content="Mo" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
                                  Checked="OnPeriodChanged" />
-                    <RadioButton x:Name="PeriodWeek" Content="Woche" GroupName="Zeitraum"
-                                 Style="{StaticResource PeriodButton}"
+                    <RadioButton x:Name="PeriodTue" Grid.Column="1" Content="Di" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
                                  Checked="OnPeriodChanged" />
-                    <RadioButton x:Name="PeriodMonth" Content="Monat" GroupName="Zeitraum"
-                                 Style="{StaticResource PeriodButton}"
+                    <RadioButton x:Name="PeriodWed" Grid.Column="2" Content="Mi" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
                                  Checked="OnPeriodChanged" />
-                    <RadioButton x:Name="PeriodYear" Content="Jahr" GroupName="Zeitraum"
-                                 Style="{StaticResource PeriodButton}"
+                    <RadioButton x:Name="PeriodThu" Grid.Column="3" Content="Do" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
                                  Checked="OnPeriodChanged" />
-                </UniformGrid>
+                    <RadioButton x:Name="PeriodFri" Grid.Column="4" Content="Fr" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodSat" Grid.Column="5" Content="Sa" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodSun" Grid.Column="6" Content="So" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodWeek" Grid.Column="7" Content="Woche" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodMonth" Grid.Column="8" Content="Monat" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                    <RadioButton x:Name="PeriodYear" Grid.Column="9" Content="Jahr" GroupName="Zeitraum"
+                                 Style="{StaticResource PeriodButton}" Padding="4,6"
+                                 Checked="OnPeriodChanged" />
+                </Grid>
             </Border>
 
             <TextBlock x:Name="PeriodRangeText"
